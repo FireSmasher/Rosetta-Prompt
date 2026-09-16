@@ -1,0 +1,94 @@
+[
+  {
+    "id": "F-0002-placeholder",
+    "target": "sonnet",
+    "original": "write a prompt that picks the right model for my price scraper and says which effort",
+    "context": "",
+    "rewrite": "You are choosing a model for a price scraper. Recommend [MODEL NAME] at the effort level that fits, and explain the choice in two sentences.",
+    "expected": "Rejected",
+    "must_fail": [
+      "grounding.placeholder"
+    ],
+    "why": "4 Sep 2026 skill test: without context the rewrite came back with [MODEL NAME] style placeholders."
+  },
+  {
+    "id": "F-0003-preamble",
+    "target": "fable",
+    "original": "make this better: summarise the thread for me",
+    "context": "",
+    "rewrite": "Here is the rewritten prompt:\n\nSummarize the email thread below in five sentences, covering what was decided and what is still open.",
+    "expected": "Rejected",
+    "must_fail": [
+      "output.preamble"
+    ],
+    "why": "The rewrite request asks for the prompt alone, pasted as-is. A lead-in line gets pasted with it."
+  },
+  {
+    "id": "F-0004-opus-verify",
+    "target": "opus",
+    "original": "fix the failing date parser test in utils and tell me what was wrong",
+    "context": "",
+    "rewrite": "Fix the failing date parser test in the utils module. Before you finish, double-check your answer and add a final verification step. Then tell me in two sentences what was wrong.",
+    "expected": "Rejected",
+    "must_fail": [
+      "target.opus5_verify"
+    ],
+    "why": "Prompting Claude Opus 5, Task scope and over-verification: remove explicit verification instructions."
+  },
+  {
+    "id": "F-0005-haiku-effort",
+    "target": "haiku",
+    "original": "tag each of these support tickets as billing, bug or other",
+    "context": "",
+    "rewrite": "Label each support ticket below as billing, bug or other. Output one label per line, in the same order as the tickets. Run this at low effort.",
+    "expected": "Rejected",
+    "must_fail": [
+      "target.haiku_effort"
+    ],
+    "why": "Haiku 4.5 is not on the effort parameter's supported-model list; sending effort errors."
+  },
+  {
+    "id": "F-0006-overbuilt",
+    "target": "sonnet",
+    "original": "make the tone of this email a bit warmer",
+    "context": "",
+    "rewrite": "<role>You are an expert communications strategist with twenty years of experience in corporate, nonprofit and personal correspondence.</role>\n\n<instructions>\nYour task is to revise the tone of the email provided by the user so that it reads as warmer. Warmth here means the reader feels acknowledged, respected and valued, while the email keeps its original purpose, facts, requests and structure. Work through the following steps in order.\n\n1. Read the entire email carefully and identify its purpose, its audience, the relationship between sender and recipient, and every request or commitment it contains.\n2. Identify every sentence that reads as cold, abrupt, transactional, overly formal or impersonal, and note why it reads that way.\n3. For each such sentence, write a warmer alternative that keeps the meaning exactly, adding acknowledgement of the reader, appreciation where it is genuine, and softer phrasing for requests.\n4. Adjust the greeting and the sign-off so they match the warmer tone without becoming overly familiar for the relationship.\n5. Read the whole revised email again and make sure the tone is consistent from start to finish, that nothing sounds forced or saccharine, and that no facts, dates, names, numbers or requests have changed.\n6. Make sure the email is not noticeably longer than the original, and trim any added warmth that does not earn its place.\n</instructions>\n\n<examples>\n<example><before>Send me the report by Friday.</before><after>Could you send me the report by Friday? It would really help me prepare for Monday.</after></example>\n<example><before>Your request has been denied.</before><after>Thank you for your request. Unfortunately we are not able to approve it this time, and I am sorry for the disappointment.</after></example>\n<example><before>See attached.</before><after>I have attached the file for you. Let me know if anything is unclear.</after></example>\n<example><before>Meeting moved to 3pm.</before><after>Quick heads up: we have moved the meeting to 3pm. Thanks for your flexibility.</after></example>\n<example><before>Noted.</before><after>Thanks for letting me know, I have made a note of it.</after></example>\n</examples>\n\n<output_format>\nReturn only the revised email, with its subject line if the original had one. Do not include commentary, explanations, a list of changes, or any text before or after the email. Preserve the original paragraph breaks, and keep any lists, links, signatures and attachment references exactly where they were in the original email so the sender can paste the result directly into their email client without further editing, reformatting or checking, and so the recipient receives a message that is clearly the same message, only warmer in tone, more considerate of the reader, and more pleasant to read from the opening line through to the closing line and signature.\n</output_format>\n\n<email>\nPaste the email here.\n</email>",
+    "expected": "Rejected",
+    "must_fail": [
+      "length.overbuilt"
+    ],
+    "why": "What NOT to over-apply: a one-line ask needs a short clear prompt, not a tagged essay with five examples."
+  },
+  {
+    "id": "F-0007-review-filter",
+    "target": "sonnet",
+    "original": "review this PR for bugs",
+    "context": "",
+    "rewrite": "Review the pull request below for bugs. Only report high-severity issues and don't nitpick.",
+    "expected": "Rejected",
+    "must_fail": [
+      "target.review_filter"
+    ],
+    "why": "Prompting Claude Sonnet 5, Code review harnesses: severity filters in the finding step lower recall."
+  },
+  {
+    "id": "G-0001-clean",
+    "target": "opus",
+    "original": "can u look at my cover letter and make it less generic, its for a junior data analyst internship at an online bookshop",
+    "context": "",
+    "rewrite": "Revise the cover letter below for a junior data analyst internship at an online bookshop so it reads less generic. Replace general claims with specific ones drawn from the letter itself, and tie them to what a data analyst role at an online bookshop would value. Keep every fact about me unchanged and do not add experience I have not stated. If the letter lacks something the role clearly needs, say what is missing in one line after the letter instead of inventing it. Return the revised letter, then that line if needed.\n\n<cover_letter>\n(paste the letter here)\n</cover_letter>",
+    "expected": "Approved",
+    "must_fail": [],
+    "why": "Scoped, grounded, no dashes, no capitalised placeholders, no Opus verification lines."
+  },
+  {
+    "id": "G-0002-template-var-kept",
+    "target": "sonnet",
+    "original": "turn this into a better prompt, keep the {{TICKET}} variable since my script fills it: classify {{TICKET}} as bug or feature",
+    "context": "",
+    "rewrite": "Classify the support ticket below as either bug or feature. Answer with the single word bug or feature, nothing else.\n\n<ticket>\n{{TICKET}}\n</ticket>",
+    "expected": "Approved",
+    "must_fail": [],
+    "why": "A template variable the original already uses is not an invented placeholder."
+  }
+]

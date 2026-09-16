@@ -1,0 +1,12 @@
+.build/
+.swiftpm/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Your own data. Read locally, never committed.
+skill/reference/*.local.md
+skill/evals/calibration/**/*.json
+skill/evals/reports/
+skill/evals/cases/*
+!skill/evals/cases/seed-2026-09-16.json
