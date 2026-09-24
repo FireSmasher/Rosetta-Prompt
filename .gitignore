@@ -10,3 +10,6 @@ skill/evals/calibration/**/*.json
 skill/evals/reports/
 skill/evals/cases/*
 !skill/evals/cases/seed-2026-09-16.json
+
+# Local Claude Code settings
+.claude/

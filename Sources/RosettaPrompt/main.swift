@@ -973,22 +973,18 @@ enum Advisor {
         let selectedClass = weightClass(selected)
         let gap = selectedClass - needed
 
-        // The order of levers, straight out of model-selection.md: sweep effort on the model you
-        // already have before changing tier. One class of daylight is an effort change, not a model
-        // change. Two classes is a genuine mismatch and worth the interruption.
-        let recommended: Target
+        // The recommendation comes from the task alone, so the same prompt gets the same model and
+        // effort whatever is selected. The selection only sets the verdict: one class of daylight
+        // is an effort sweep on the model you have, two is a genuine mismatch worth interrupting.
+        let recommended = model(forClass: needed, family: family)
         let verdict: Verdict
         if gap >= 2 {
-            recommended = model(forClass: needed, family: family)
             verdict = .wrongSize
         } else if gap == 1 {
-            recommended = selected
             verdict = .lowerEffort
         } else if gap <= -1 {
-            recommended = model(forClass: needed, family: family)
             verdict = .underpowered
         } else {
-            recommended = selected
             verdict = .right
         }
 
@@ -1038,6 +1034,7 @@ final class TranslatorState: ObservableObject {
     @Published var extraContext: String = "" { didSet { clearAdvice() } }
     @Published var selectedTarget: Target = targets[1] { didSet { clearAdvice() } } // Opus 5 default: general purpose, no assumed audience
     @Published var result: String = ""
+    @Published var hoveredRung: String?  // the guide ladder rung under the pointer; see GuidePanel
     @Published var isRunning: Bool = false
     @Published var errorText: String = ""
     /// What the run is doing right now: rewriting, checking, or retrying.
@@ -1092,7 +1089,14 @@ final class TranslatorState: ObservableObject {
         mutating = true
         advice = Advisor.assess(task: messyPrompt, context: extraContext, selected: selectedTarget)
         mutating = false
-        awaitingChoice = advice != nil
+        // Only a real model mismatch waits for a choice. Otherwise the effort pick is shown as
+        // information and the rewrite starts on this same press.
+        guard let advice else { return }
+        if advice.verdict.needsDecision {
+            awaitingChoice = true
+        } else {
+            rewrite(for: selectedTarget)
+        }
     }
 
     /// Take the guide's recommendation: re-point the target, re-score against it, and rewrite once.
@@ -1267,8 +1271,9 @@ struct GuidePanel: View {
     @ObservedObject var state: TranslatorState
     /// Which rung the mouse is over. Nil falls back to the selected target, so the detail block is
     /// never empty and never changes height. A block that grew on hover would make the whole panel
-    /// jump every time the pointer crossed it.
-    @State private var hovered: String?
+    /// jump every time the pointer crossed it. It lives on TranslatorState, not in @State: the
+    /// macOS 27 Command Line Tools ship without SwiftUI's @State macro plugin, so @State fails to build.
+    private var hovered: String? { state.hoveredRung }
 
     private var family: String {
         state.selectedTarget.fileName == "openai-prompting-guide.md" ? "openai" : "anthropic"
@@ -1330,7 +1335,7 @@ struct GuidePanel: View {
                 }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
-                .onHover { hovered = $0 ? rung.id : nil }
+                .onHover { state.hoveredRung = $0 ? rung.id : nil }
                 .onTapGesture {
                     if let t = rung.target { state.selectedTarget = t }
                 }
@@ -1340,7 +1345,7 @@ struct GuidePanel: View {
         // jumps rather than travels. onContinuousHover's .ended fires for the ladder as a whole and
         // is the reliable clear, so enter is tracked per rung and exit is tracked once, here.
         .onContinuousHover { phase in
-            if case .ended = phase { hovered = nil }
+            if case .ended = phase { state.hoveredRung = nil }
         }
     }
 
@@ -1559,7 +1564,9 @@ struct ChoiceAlert: View {
 
     var body: some View {
         if state.awaitingChoice, let advice = state.advice, advice.verdict.needsDecision {
-            Text("Guide suggests \(advice.model.label).")
+            Text(advice.verdict == .underpowered
+                 ? "\(state.selectedTarget.label) is weaker than this task needs. Guide suggests \(advice.model.label)."
+                 : "Guide suggests \(advice.model.label).")
                 .font(.caption)
                 .foregroundStyle(guideAccent)
             Button("Switch to \(advice.model.label)") { state.acceptRecommendation() }
