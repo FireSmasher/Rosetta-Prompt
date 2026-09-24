@@ -61,11 +61,11 @@ let targets: [Target] = [
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
                .init(label: "about-claude/models/optimizing-for-cost-and-intelligence", url: "https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence"),
            ]),
-    Target(id: "opus", label: "Claude Opus 5",
+    Target(id: "opus", label: "Claude Opus 5.5",
            fileName: "anthropic-prompting-guide.md",
            generalHeader: "## General principles (all current Claude models)",
-           specificHeader: "## Opus 5-specific notes",
-           sourceDate: "16 Sep 2026",
+           specificHeader: "## Opus 5.5-specific notes",
+           sourceDate: "24 Sep 2026",
            confidencePercent: 95,
            confidenceNote: "Primary Anthropic docs.",
            confidenceCriteria: [
@@ -76,10 +76,10 @@ let targets: [Target] = [
            ],
            sourceLinks: [
                .init(label: "prompt-engineering/claude-prompting-best-practices", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"),
-               .init(label: "prompt-engineering/prompting-claude-opus-5", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5"),
-               .init(label: "models/opus-5/overview", url: "https://platform.claude.com/docs/en/models/opus-5/overview"),
-               .init(label: "models/opus-5/whats-new-opus-5", url: "https://platform.claude.com/docs/en/models/opus-5/whats-new-opus-5"),
-               .init(label: "models/opus-5/migration-guide", url: "https://platform.claude.com/docs/en/models/opus-5/migration-guide"),
+               .init(label: "prompt-engineering/prompting-claude-opus-5-5", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5"),
+               .init(label: "models/opus-5-5/overview", url: "https://platform.claude.com/docs/en/models/opus-5-5/overview"),
+               .init(label: "models/opus-5-5/whats-new-opus-5-5", url: "https://platform.claude.com/docs/en/models/opus-5-5/whats-new-opus-5-5"),
+               .init(label: "models/opus-5-5/migration-guide", url: "https://platform.claude.com/docs/en/models/opus-5-5/migration-guide"),
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
            ]),
     Target(id: "sonnet", label: "Claude Sonnet 5",
@@ -125,13 +125,14 @@ let targets: [Target] = [
                .init(label: "build-with-claude/effort", url: "https://platform.claude.com/docs/en/build-with-claude/effort"),
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
            ]),
-    Target(id: "sol", label: "GPT-5.6 Sol",
+    // GPT-6 Sol and Luna replaced the GPT-5.6 tiers on 24 Sep 2026. OpenAI publishes no GPT-6 Terra.
+    Target(id: "sol", label: "GPT-6 Sol",
            fileName: "openai-prompting-guide.md",
            generalHeader: "## General principles (current GPT models)",
-           specificHeader: "## Sol-specific notes",
-           sourceDate: "4 Sep 2026",
-           confidencePercent: 85,
-           confidenceNote: "Primary docs throughout. No tier vs tier behavior split is published by OpenAI itself.",
+           specificHeader: "## GPT-6 Sol-specific notes",
+           sourceDate: "24 Sep 2026",
+           confidencePercent: 80,
+           confidenceNote: "Primary docs. OpenAI's one GPT-6 guide covers the whole family, and its behaviour notes were observed on Astra, not on this model.",
            confidenceCriteria: [
                .init(label: "Dedicated per-tier prompting page exists", met: false),
                .init(label: "Model overview / pricing page read", met: true),
@@ -139,18 +140,18 @@ let targets: [Target] = [
                .init(label: "Family prompting guide covered", met: true),
            ],
            sourceLinks: [
-               .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
+               .init(label: "guides/latest-model", url: "https://developers.openai.com/api/docs/guides/latest-model"),
                .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
-               .init(label: "guides/prompt-guidance-gpt-5p6", url: "https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6"),
-               .init(label: "models/gpt-5.6-sol", url: "https://developers.openai.com/api/docs/models/gpt-5.6-sol"),
+               .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
+               .init(label: "models/gpt-6-sol", url: "https://developers.openai.com/api/docs/models/gpt-6-sol"),
            ]),
-    Target(id: "terra", label: "GPT-5.6 Terra",
+    Target(id: "luna", label: "GPT-6 Luna",
            fileName: "openai-prompting-guide.md",
            generalHeader: "## General principles (current GPT models)",
-           specificHeader: "## Terra-specific notes",
-           sourceDate: "4 Sep 2026",
-           confidencePercent: 85,
-           confidenceNote: "Primary docs throughout. No tier vs tier behavior split is published by OpenAI itself.",
+           specificHeader: "## GPT-6 Luna-specific notes",
+           sourceDate: "24 Sep 2026",
+           confidencePercent: 80,
+           confidenceNote: "Primary docs. OpenAI's one GPT-6 guide covers the whole family, and its behaviour notes were observed on Astra, not on this model.",
            confidenceCriteria: [
                .init(label: "Dedicated per-tier prompting page exists", met: false),
                .init(label: "Model overview / pricing page read", met: true),
@@ -158,37 +159,18 @@ let targets: [Target] = [
                .init(label: "Family prompting guide covered", met: true),
            ],
            sourceLinks: [
-               .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
+               .init(label: "guides/latest-model", url: "https://developers.openai.com/api/docs/guides/latest-model"),
                .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
-               .init(label: "guides/prompt-guidance-gpt-5p6", url: "https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6"),
-               .init(label: "models/gpt-5.6-terra", url: "https://developers.openai.com/api/docs/models/gpt-5.6-terra"),
-           ]),
-    Target(id: "luna", label: "GPT-5.6 Luna",
-           fileName: "openai-prompting-guide.md",
-           generalHeader: "## General principles (current GPT models)",
-           specificHeader: "## Luna-specific notes",
-           sourceDate: "4 Sep 2026",
-           confidencePercent: 85,
-           confidenceNote: "Primary docs throughout. No tier vs tier behavior split is published by OpenAI itself.",
-           confidenceCriteria: [
-               .init(label: "Dedicated per-tier prompting page exists", met: false),
-               .init(label: "Model overview / pricing page read", met: true),
-               .init(label: "Tier-to-tier behavior split published", met: false),
-               .init(label: "Family prompting guide covered", met: true),
-           ],
-           sourceLinks: [
                .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
-               .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
-               .init(label: "guides/prompt-guidance-gpt-5p6", url: "https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6"),
-               .init(label: "models/gpt-5.6-luna", url: "https://developers.openai.com/api/docs/models/gpt-5.6-luna"),
+               .init(label: "models/gpt-6-luna", url: "https://developers.openai.com/api/docs/models/gpt-6-luna"),
            ]),
     Target(id: "astra", label: "GPT-6 Astra",
            fileName: "openai-prompting-guide.md",
            generalHeader: "## General principles (current GPT models)",
            specificHeader: "## GPT-6 Astra-specific notes",
-           sourceDate: "4 Sep 2026",
+           sourceDate: "24 Sep 2026",
            confidencePercent: 85,
-           confidenceNote: "Primary docs. Model is one day old at research time, so little independent field verification yet.",
+           confidenceNote: "Primary docs. The GPT-6 guide's behaviour notes were observed on Astra itself; little independent field verification yet.",
            confidenceCriteria: [
                .init(label: "Dedicated prompting page exists", met: true),
                .init(label: "Model overview / pricing page read", met: true),
@@ -740,9 +722,9 @@ struct Advice {
 @MainActor
 enum Advisor {
     // Weight class, cheapest to dearest, used only to compare the recommendation against what is
-    // currently selected. Sonnet 5 and Terra share a class: both are their family's sensible default.
+    // currently selected. GPT-6 has three models, so Sol covers classes 2 and 3 (see the rubric's ladder).
     static func weightClass(_ target: Target) -> Int {
-        let builtIn = ["haiku": 1, "luna": 1, "sonnet": 2, "terra": 2, "opus": 3, "sol": 3, "fable": 4, "astra": 4]
+        let builtIn = ["haiku": 1, "luna": 1, "sonnet": 2, "opus": 3, "sol": 3, "fable": 4, "astra": 4]
         return Rubric.int("class", target.id, fallback: builtIn[target.id] ?? 2)
     }
 
@@ -755,7 +737,7 @@ enum Advisor {
     /// so this never makes it.
     private static func model(forClass cls: Int, family: String) -> Target {
         let ladder = family == "openai"
-            ? Rubric.list("ladder", "openai", fallback: ["luna", "terra", "sol", "astra"])
+            ? Rubric.list("ladder", "openai", fallback: ["luna", "sol", "sol", "astra"])
             : Rubric.list("ladder", "anthropic", fallback: ["haiku", "sonnet", "opus", "fable"])
         let idx = min(max(cls, 1), ladder.count) - 1
         return target(id: ladder[idx])
@@ -1032,7 +1014,7 @@ final class TranslatorState: ObservableObject {
     // A guide that outlives the thing it judged is worse than no guide.
     @Published var messyPrompt: String = "" { didSet { clearAdvice() } }
     @Published var extraContext: String = "" { didSet { clearAdvice() } }
-    @Published var selectedTarget: Target = targets[1] { didSet { clearAdvice() } } // Opus 5 default: general purpose, no assumed audience
+    @Published var selectedTarget: Target = targets[1] { didSet { clearAdvice() } } // Opus 5.5 default: general purpose, no assumed audience
     @Published var result: String = ""
     @Published var hoveredRung: String?  // the guide ladder rung under the pointer; see GuidePanel
     @Published var isRunning: Bool = false
@@ -1225,13 +1207,16 @@ struct Rung: Identifiable {
 enum Ladder {
     static func rungs(for family: String) -> [Rung] {
         let ids = family == "openai"
-            ? Rubric.list("guide-ladder", "openai", fallback: ["luna", "terra", "sol", "astra"])
+            ? Rubric.list("guide-ladder", "openai", fallback: ["luna", "sol", "astra"])
             : Rubric.list("guide-ladder", "anthropic", fallback: ["haiku", "sonnet", "opus", "fable"])
+        // Spread the rungs over the four heights and colours, so the family's top model always
+        // gets the tallest, brightest bar. GPT-6 has three models: steps 0, 2 and 3.
+        let last = max(ids.count - 1, 1)
         return ids.enumerated().map { idx, id in
             Rung(id: id,
                  label: Rubric.value("rung-label", id, fallback: id.capitalized),
                  target: targets.first { $0.id == id },
-                 index: idx)
+                 index: Int((Double(idx) * 3 / Double(last)).rounded()))
         }
     }
 
@@ -1545,7 +1530,10 @@ struct SourceLinksRow: View {
     let links: [SourceLink]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        // Two columns: six links stacked in one column cost the editors below about 70 points of
+        // height, enough to push the whole window past a short screen.
+        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                  alignment: .leading, spacing: 1) {
             ForEach(links, id: \.url) { link in
                 if let url = URL(string: link.url) {
                     Link(link.label, destination: url)
@@ -1614,7 +1602,7 @@ struct ContentView: View {
                 Text("Messy prompt").font(.caption).foregroundStyle(.secondary)
                 TextEditor(text: $state.messyPrompt)
                     .font(.system(.body, design: .monospaced))
-                    .frame(minHeight: 140)
+                    .frame(minHeight: 90)
                     .border(Color.gray.opacity(0.3))
 
                 DisclosureGroup("Extra context (optional)") {
@@ -1625,7 +1613,7 @@ struct ContentView: View {
 
                         TextEditor(text: $state.extraContext)
                             .font(.system(.body, design: .monospaced))
-                            .frame(minHeight: 60)
+                            .frame(minHeight: 50)
                             .border(Color.gray.opacity(0.3))
                     }
                 }
@@ -1690,12 +1678,15 @@ struct ContentView: View {
                 }
                 TextEditor(text: .constant(state.result))
                     .font(.system(.body, design: .monospaced))
-                    .frame(minHeight: 200)
+                    .frame(minHeight: 110)
                     .border(Color.gray.opacity(0.3))
             }
         }
         .padding(16)
-        .frame(minWidth: 830, minHeight: 640)
+        // Pinned to the top: when the window is shorter than the content (a short screen, larger
+        // text), SwiftUI centred it and cut off the title and Target picker. Now only the bottom
+        // of the result box can run short, and the minimum height fits a 13-inch screen.
+        .frame(minWidth: 830, maxWidth: .infinity, minHeight: 560, maxHeight: .infinity, alignment: .top)
     }
 }
 
@@ -1705,6 +1696,6 @@ struct RosettaPromptApp: App {
         WindowGroup("Rosetta Prompt") {
             ContentView()
         }
-        .windowResizability(.contentSize)
+        .windowResizability(.contentMinSize)
     }
 }

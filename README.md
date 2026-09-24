@@ -3,7 +3,7 @@
 A small macOS app that rewrites a messy prompt into a clear one for a specific target model,
 using that model's own published prompting guidance, then checks the rewrite before showing it.
 
-Targets: Claude Fable 5.1, Opus 5, Sonnet 5 and Haiku 4.5; GPT-5.6 Sol, Terra and Luna; GPT-6 Astra.
+Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5 and Haiku 4.5; GPT-6 Astra, Sol and Luna.
 
 ## What it does
 
@@ -11,7 +11,7 @@ Targets: Claude Fable 5.1, Opus 5, Sonnet 5 and Haiku 4.5; GPT-5.6 Sol, Terra an
    says whether the selected target is the right size. If it suggests a lower or higher model,
    **Switch to {model}** selects it and starts the rewrite in one click. Nothing is sent to a
    model until you choose.
-2. **Rewrites** the prompt with Claude Opus 5, fed the general and model-specific sections of
+2. **Rewrites** the prompt with Claude Opus (Claude Code's `opus` alias, Opus 5.5 since 22 September 2026), fed the general and model-specific sections of
    the distilled guides in `skill/reference/`.
 3. **Checks** the rewrite: code checks (no em or en dashes, no placeholders, no preamble or code
    fence, length sanity, target-specific rules), then an advisory Sonnet 5 judge. A failed code

@@ -55,6 +55,10 @@ same document:
 
 > "Claude Opus 5 at `low` beats Opus 4.8 for about 30% of the cost per solved task"
 
+(Both quotes are from the 16 September 2026 read. The 24 September read adds: on the same
+subset, "Opus 5.5 at its default matched Fable 5.1 at its default ... for about a fifth of the
+cost per solved task.")
+
 > "On the SWE-bench Pro subset ... Claude Opus 5 alone matched Claude Fable 5.1 alone at
 > the default (91.7% compared with 92.1%, inside run-to-run noise) at about 15% less per
 > solved task"
@@ -89,8 +93,12 @@ parameter. Effort applies to every output token, including tool calls and thinki
 
 Per model:
 
-- **Opus 5**: "Start with `high`, the default ... use `low` and `medium` liberally as your
-  primary control for token cost and response time wherever your evals show quality holds."
+- **Opus 5.5** (24 Sep 2026): the default is `medium`, one level below Opus 5's `high`. "Start at
+  `medium`... set it explicitly, and test several levels against your own evals rather than
+  carrying over the setting you used on Claude Opus 5." Thinking is always on and cannot be
+  disabled. The Opus 5 advice it replaces: "Start with `high`, the default ... use `low` and
+  `medium` liberally as your primary control for token cost and response time wherever your
+  evals show quality holds."
 - **Sonnet 5**: defaults to `high`. `medium` is the "Cost-saving step-down from the default.
   Comparable to Claude Sonnet 4.6 at high effort." `low` is "For high-volume or
   latency-sensitive workloads. Suitable for chat and non-coding use cases."
@@ -108,14 +116,14 @@ answer. The app's output estimate is driven by task shape, never by effort.
 
 ## The ladder and what each tier is for
 
-Lowest to highest cost and capability: Haiku 4.5, Sonnet 5, Opus 5, Fable 5.1.
+Lowest to highest cost and capability: Haiku 4.5, Sonnet 5, Opus 5.5, Fable 5.1.
 
 | Model | Input $/1M | Output $/1M | Documented positioning |
 |---|---|---|---|
 | Claude Haiku 4.5 | $1 | $5 | "It fits high-volume work with checkable outputs, not long agentic loops." |
 | Claude Sonnet 5 | $2 | $10 | Mid tier. Its `medium` effort matches Sonnet 4.6 at `high`. |
-| Claude Opus 5 | $5 | $25 | Matched Fable 5.1 on the SWE-bench Pro subset at about 15% less per solved task. |
-| Claude Fable 5.1 | $10 | $50 | Frontier. "For most agent workloads, start with Claude Fable 5.1 at `low` effort." |
+| Claude Opus 5.5 | $4 | $20 | Anthropic's default for most workloads. At `medium` it matched Fable 5.1 on the SWE-bench Pro subset for about a fifth of the cost per solved task. |
+| Claude Fable 5.1 | $10 | $50 | Frontier. "Use Claude Fable 5.1 for demanding reasoning and long-horizon agentic work, or when your evals on Claude Opus 5.5 at higher effort still fall short." (24 Sep 2026; until then Anthropic advised starting agent work on Fable 5.1 at `low`.) |
 
 Haiku 4.5 became a rewrite target on 16 September 2026 (the app was renamed from
 PromptTranslator to Rosetta Prompt the same day), so class 1 on the Anthropic ladder now
@@ -125,10 +133,14 @@ GPT tiers, from `openai-prompting-guide.md` in this folder, not from Anthropic:
 
 | Model | Input $/1M | Output $/1M | Positioning |
 |---|---|---|---|
-| GPT-5.6 Luna | $0.20 | $1.20 | Cheapest. Classification, extraction, formatting, narrow mechanical work. |
-| GPT-5.6 Terra | $2 | $12 | Balanced middle tier. Default for standard coding and document work. |
-| GPT-5.6 Sol | $4 | $20 | Heavyweight reasoning, long-horizon agentic work. |
-| GPT-6 Astra | $10 | $50 | Newest and most capable. Uses fewer output tokens, so cost per task can land below Sol. |
+| GPT-6 Luna | $0.10 | $0.50 | "For cost-sensitive, high-volume workloads." Classification, extraction, formatting. |
+| GPT-6 Sol | $2 | $10 | "To balance intelligence and cost." Covers both middle classes, because GPT-6 has no Terra. |
+| GPT-6 Astra | $10 | $50 | Most capable. OpenAI's own starting point: "If you're not sure where to start, use GPT-6 Astra." |
+
+Since 24 September 2026 the app offers GPT-6 only. GPT-6 Sol and Luna were
+released 22 September 2026 and OpenAI's models page now recommends them over GPT-5.6 Sol,
+Terra and Luna, which still work but are no longer offered here. There is no GPT-6 Terra, so
+the GPT ladder has three rungs and Sol takes classes 2 and 3.
 
 ## What the app does with this
 
@@ -148,7 +160,8 @@ GPT tiers, from `openai-prompting-guide.md` in this folder, not from Anthropic:
 
 ## Effort for the rewrite call itself
 
-The app runs the rewrite on Claude Opus 5. Until 5 September 2026 that call was pinned to
+The app runs the rewrite through Claude Code's `opus` alias, which since 22 September 2026
+resolves to Claude Opus 5.5 (it was Opus 5 when the choice was made). Until 5 September 2026 that call was pinned to
 `high` effort. It now follows the assessed difficulty, capped at `high`:
 
 | Assessed task effort | Rewrite runs at |
@@ -174,7 +187,8 @@ What the change actually saves is thinking tokens, not output length:
 
 It is worth being precise about what is not established. The `rosetta-prompt` skill records
 a 4 September 2026 comparison that picked Opus 5 at `high` as the best rewriter of five
-candidates. That test did not cover Opus 5 at `low` or `medium`. So "quality holds at lower
+candidates. That test did not cover Opus 5 at `low` or `medium`, and has not been re-run on
+Opus 5.5. So "quality holds at lower
 effort on simple prompts" is an assumption here, not a measured finding. If a rewrite of a
 simple prompt looks thin, raise the effort and re-test before looking elsewhere.
 
@@ -214,7 +228,7 @@ numeric difficulty rubric. Treat them as a starting point that earns changes fro
 ```rubric
 @table ladder
 anthropic = haiku, sonnet, opus, fable
-openai = luna, terra, sol, astra
+openai = luna, sol, sol, astra
 ```
 
 ```rubric
@@ -381,12 +395,11 @@ screen next to it.
 ```rubric
 @table positioning
 sonnet | Mid tier, $2 in / $10 out per million. Its medium effort matches Sonnet 4.6 at high.
-opus | $5 in / $25 out per million. Matched Fable 5.1 on the SWE-bench Pro subset at about 15% less per solved task.
-fable | Frontier, $10 in / $50 out per million. Anthropic suggests starting it at low effort, not high.
-luna | Cheapest GPT tier, $0.20 in / $1.20 out per million. Classification, extraction, formatting.
-terra | Balanced GPT tier, $2 in / $12 out per million. Standard coding and document work.
-sol | Heavyweight GPT reasoning, $4 in / $20 out per million. Long-horizon agentic work.
-astra | Newest GPT model, $10 in / $50 out per million. Fewer output tokens, so cost per task can land below Sol.
+opus | $4 in / $20 out per million. Anthropic's default for most work; at medium it matched Fable 5.1 for about a fifth of the cost per solved task.
+fable | Frontier, $10 in / $50 out per million. For demanding reasoning and long agentic runs, or when Opus 5.5 falls short.
+luna | Cheapest GPT-6 model, $0.10 in / $0.50 out per million. Cost-sensitive, high-volume work.
+sol | Balanced GPT-6 model, $2 in / $10 out per million. Everyday coding through hard reasoning.
+astra | Most capable GPT-6 model, $10 in / $50 out per million. Fewer output tokens, so cost per task can land lower.
 ```
 
 ## Ultracode is not an effort level
@@ -402,7 +415,8 @@ the workflow spawns, each with its own context. That is the larger multiplier by
 
 ## The ladder shown in the app
 
-The guide panel draws a four rung ladder for whichever family is selected, brightening as
+The guide panel draws a ladder for whichever family is selected (four rungs for Claude, three
+for GPT-6), brightening as
 capability rises. `guide-ladder` is the display order and is not the same as `ladder` above:
 that one maps a difficulty class to a rewrite target. Since 16 September 2026 the two match
 for the Anthropic family, because Haiku 4.5 is now a rewrite target as well as a rung.
@@ -410,17 +424,16 @@ for the Anthropic family, because Haiku 4.5 is now a rewrite target as well as a
 ```rubric
 @table guide-ladder
 anthropic = haiku, sonnet, opus, fable
-openai = luna, terra, sol, astra
+openai = luna, sol, astra
 ```
 
 ```rubric
 @table rung-label
 haiku | Haiku 4.5
 sonnet | Sonnet 5
-opus | Opus 5
+opus | Opus 5.5
 fable | Fable 5.1
 luna | Luna
-terra | Terra
 sol | Sol
 astra | Astra
 ```
@@ -429,11 +442,10 @@ astra | Astra
 @table price
 haiku | $1 / $5 per M
 sonnet | $2 / $10 per M
-opus | $5 / $25 per M
+opus | $4 / $20 per M
 fable | $10 / $50 per M
-luna | $0.20 / $1.20 per M
-terra | $2 / $12 per M
-sol | $4 / $20 per M
+luna | $0.10 / $0.50 per M
+sol | $2 / $10 per M
 astra | $10 / $50 per M
 ```
 
@@ -480,15 +492,10 @@ luna.2 | Pull fields into a CSV
 luna.3 | Reformat to a fixed template
 luna.4 | Bulk translate short strings
 luna.5 | Not for open ended judgement
-terra.1 | Write a CRUD endpoint
-terra.2 | Summarise a 40 page PDF
-terra.3 | Clean and join two datasets
-terra.4 | Day to day coding work
-terra.5 | Step up to Sol if it stalls
-sol.1 | Debug across several services
-sol.2 | Long multi step research
-sol.3 | Hard reasoning, real tradeoffs
-sol.4 | Agent runs lasting hours
+sol.1 | Day to day coding work
+sol.2 | Summarise a 40 page PDF
+sol.3 | Debug across several services
+sol.4 | Long multi step research
 sol.5 | Six effort levels, none to max
 astra.1 | Frontier reasoning, fewest tokens
 astra.2 | Deep multi file refactors
@@ -504,7 +511,6 @@ Haiku 4.5 sits at class 1 on the Anthropic ladder so the ring lands on the right
 haiku = 1
 luna = 1
 sonnet = 2
-terra = 2
 opus = 3
 sol = 3
 fable = 4

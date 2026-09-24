@@ -33,9 +33,9 @@ CALIB_DIR = os.path.join(EVALS_DIR, "calibration")
 REPORTS_DIR = os.path.join(EVALS_DIR, "reports")
 
 TARGET_LABELS = {
-    "fable": "Claude Fable 5.1", "opus": "Claude Opus 5", "sonnet": "Claude Sonnet 5",
-    "haiku": "Claude Haiku 4.5", "sol": "GPT-5.6 Sol", "terra": "GPT-5.6 Terra",
-    "luna": "GPT-5.6 Luna", "astra": "GPT-6 Astra",
+    "fable": "Claude Fable 5.1", "opus": "Claude Opus 5.5", "sonnet": "Claude Sonnet 5",
+    "haiku": "Claude Haiku 4.5", "sol": "GPT-6 Sol",
+    "luna": "GPT-6 Luna", "astra": "GPT-6 Astra",
 }
 
 DEFAULT_LIMITS = {
@@ -204,7 +204,7 @@ def code_checks(target, original, rewrite, context):
         m = OPUS_VERIFY.search(rewrite)
         if m:
             blocking.append(finding("target.opus5_verify", m.group(0),
-                                    "Opus 5 already verifies its work. Remove the verification instruction.",
+                                    "Opus 5.5 already verifies its work. Remove the verification instruction.",
                                     [m.start(), m.end()]))
     if target in ("opus", "sonnet"):
         m = REVIEW_FILTER.search(rewrite)

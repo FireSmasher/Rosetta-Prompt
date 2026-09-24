@@ -33,15 +33,10 @@ luna.2 | Pull fields into a CSV
 luna.3 | Reformat to a fixed template
 luna.4 | Bulk translate short strings
 luna.5 | Not for open ended judgement
-terra.1 | Write a CRUD endpoint
-terra.2 | Summarise a 40 page PDF
-terra.3 | Clean and join two datasets
-terra.4 | Day to day coding work
-terra.5 | Step up to Sol if it stalls
-sol.1 | Debug across several services
-sol.2 | Long multi step research
-sol.3 | Hard reasoning, real tradeoffs
-sol.4 | Agent runs lasting hours
+sol.1 | Day to day coding work
+sol.2 | Summarise a 40 page PDF
+sol.3 | Debug across several services
+sol.4 | Long multi step research
 sol.5 | Six effort levels, none to max
 astra.1 | Frontier reasoning, fewest tokens
 astra.2 | Deep multi file refactors

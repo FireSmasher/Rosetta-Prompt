@@ -61,8 +61,8 @@ are empty, so the judge is advisory.
 | `grounding.placeholder` | `[ALL CAPS]` slots, `TBD`, `TODO`, `<insert ...>` or `{{VAR}}` that the original and context don't already contain |
 | `length.overbuilt` | Original at most `short_words` words, rewrite over `overbuilt_words` words |
 | `length.dropped` | Original at least `dropped_min_words` words, rewrite under `dropped_ratio` of its length |
-| `target.opus5_verify` | Opus 5 target and the rewrite adds "double-check", "re-verify", "verification step" and similar |
-| `target.review_filter` | Opus 5 or Sonnet 5 target and the rewrite says "only report high-severity", "be conservative" or "don't nitpick" |
+| `target.opus5_verify` | Opus 5.5 target (carried over from Opus 5) and the rewrite adds "double-check", "re-verify", "verification step" and similar |
+| `target.review_filter` | Opus 5.5 or Sonnet 5 target and the rewrite says "only report high-severity", "be conservative" or "don't nitpick" |
 | `target.haiku_effort` | Haiku 4.5 target and the rewrite names an effort level |
 | `target.fable_antiformat` | Fable 5.1 target and the rewrite adds a blanket no-markdown/no-lists rule the original didn't ask for |
 
