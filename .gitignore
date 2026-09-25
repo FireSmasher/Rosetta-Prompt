@@ -13,3 +13,4 @@ skill/evals/cases/*
 
 # Local Claude Code settings
 .claude/
+skill/evals/scorer/

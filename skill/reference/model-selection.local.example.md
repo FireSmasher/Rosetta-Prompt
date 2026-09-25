@@ -6,6 +6,9 @@ table of the same name in `model-selection.md`, whole, so keep every row you sti
 
 Delete any table you do not want to override.
 
+In `detail`, repeat a key to give that level several examples (`opus.2` three times). The app
+rotates through them, so write jobs from your own week and the panel keeps showing new ones.
+
 ```rubric
 @table detail
 haiku.1 | Extract fields from 1000 emails

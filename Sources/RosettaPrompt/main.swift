@@ -651,6 +651,13 @@ enum Rubric {
         return (tables[table] ?? []).first { $0.0 == key }?.1 ?? fallback
     }
 
+    /// Every value filed under one key, in file order. A key may repeat, which is how a rung
+    /// carries several example jobs for the same effort level.
+    static func values(_ table: String, _ key: String) -> [String] {
+        load()
+        return (tables[table] ?? []).filter { $0.0 == key }.map(\.1)
+    }
+
     static func int(_ table: String, _ key: String, fallback: Int) -> Int {
         Int(value(table, key, fallback: "")) ?? fallback
     }
@@ -757,8 +764,13 @@ enum Advisor {
 
     /// Effort for a difficulty class, per the levels table in the rubric file, which quotes
     /// Anthropic's own stated use case for each level.
-    private static func effort(forClass cls: Int) -> String {
+    /// A row in `effort-by-model` wins over the class default, because effort names do not mean the
+    /// same thinking across models: Opus 5.5 at `medium` matches Opus 5 at `high`.
+    private static func effort(forClass cls: Int, model: String) -> String {
         let builtIn = [1: "low", 2: "medium", 3: "high", 4: "xhigh"]
+        let byModel = Rubric.value("effort-by-model", "\(model).\(cls)", fallback: "")
+        if !byModel.isEmpty { return byModel }
+        if model == "opus" && cls == 3 && Rubric.pairs("effort-by-model", fallback: []).isEmpty { return "medium" }
         return Rubric.value("effort", String(cls), fallback: builtIn[cls] ?? "high")
     }
 
@@ -784,7 +796,7 @@ enum Advisor {
 
     /// Needles too short to prefix-match safely. "tax" as a prefix also claims "taxonomy".
     private static var exactNeedles: Set<String> {
-        Set(Rubric.keys("exact", fallback: ["tax", "taxes", "plan", "plans"]))
+        Set(Rubric.keys("exact", fallback: ["tax", "taxes", "plan", "plans", "app", "apps", "lease", "tag"]))
     }
 
     // The signal tables, the thresholds and the ladders all live in model-selection.md. The
@@ -807,6 +819,16 @@ enum Advisor {
             ("traceback", "debugging"), ("stack trace", "debugging"), ("keeps dying", "debugging"),
             ("keeps failing", "debugging"), ("keeps crashing", "debugging"), ("not working", "debugging"),
             ("doesn't work", "debugging"), ("stops working", "debugging"),
+            ("wrong", "debugging"), ("slow", "performance work"), ("faster", "performance work"),
+            ("review", "a review"), ("feedback", "a review"), ("best way", "a judgement call"),
+            ("should i", "a judgement call"), ("advice", "a judgement call"), ("plan", "planning"),
+            ("planning", "planning"), ("explain how", "explanation"), ("explain why", "explanation"),
+            ("step by step", "a walkthrough"), ("cover letter", "writing for a reader"),
+            ("reply to", "writing for a reader"), ("in my voice", "writing in a voice"),
+            ("sound like me", "writing in a voice"), ("persuad", "persuasive writing"),
+            ("agent", "agentic work"), ("go through", "a multi-item sweep"), ("app", "building software"),
+            ("website", "building software"), ("landing page", "building software"),
+            ("dashboard", "building software"), ("sync", "integration"),
         ])
     }
 
@@ -817,7 +839,8 @@ enum Advisor {
             ("clean up", "tidying"), ("spell", "proofreading"), ("grammar", "proofreading"),
             ("proofread", "proofreading"), ("shorten", "trimming"), ("summar", "summarising"),
             ("list of", "listing"), ("bullet", "listing"), ("rename", "renaming"),
-            ("convert", "conversion"), ("translate to", "translation"),
+            ("convert", "conversion"), ("translate", "translation"),
+            ("tag", "tagging"), ("pull out", "extraction"), ("out of this", "extraction"), ("sort", "sorting"),
         ])
     }
 
@@ -833,6 +856,9 @@ enum Advisor {
             ("invoice", "money at stake"), ("visa", "immigration status at stake"),
             ("immigration", "immigration status at stake"),
             ("security", "security exposure"), ("vulnerab", "security exposure"), ("credential", "security exposure"),
+            ("residence permit", "residence at stake"), ("work permit", "residence at stake"),
+            ("blue card", "residence at stake"), ("landlord", "a dispute with money at stake"),
+            ("deposit", "money at stake"), ("lease", "contract terms"),
         ])
     }
 
@@ -935,8 +961,8 @@ enum Advisor {
             + rest.filter { !lengthNotes.contains($0) }
             + rest.filter { lengthNotes.contains($0) }
 
-        let class2 = Rubric.int("thresholds", "class2from", fallback: 2)
-        let class3 = Rubric.int("thresholds", "class3from", fallback: 6)
+        let class2 = Rubric.int("thresholds", "class2from", fallback: -1)
+        let class3 = Rubric.int("thresholds", "class3from", fallback: 4)
         let class4 = Rubric.int("thresholds", "class4from", fallback: 10)
 
         var needed: Int
@@ -948,10 +974,10 @@ enum Advisor {
         }
         if highStakes { needed = max(needed, 3) }
 
-        var chosenEffort = effort(forClass: needed)
+        let family = (selected.fileName == "openai-prompting-guide.md") ? "openai" : "anthropic"
+        var chosenEffort = effort(forClass: needed, model: model(forClass: needed, family: family).id)
         if highStakes, chosenEffort == "low" || chosenEffort == "medium" { chosenEffort = "high" }
 
-        let family = (selected.fileName == "openai-prompting-guide.md") ? "openai" : "anthropic"
         let selectedClass = weightClass(selected)
         let gap = selectedClass - needed
 
@@ -1069,6 +1095,7 @@ final class TranslatorState: ObservableObject {
         result = ""
 
         mutating = true
+        Ladder.turn += 1
         advice = Advisor.assess(task: messyPrompt, context: extraContext, selected: selectedTarget)
         mutating = false
         // Only a real model mismatch waits for a choice. Otherwise the effort pick is shown as
@@ -1241,11 +1268,17 @@ enum Ladder {
 
     static func height(_ index: Int) -> CGFloat { [9, 17, 26, 36][min(max(index, 0), 3)] }
 
+    /// Which example shows when a level has several. Random at launch, advanced by every
+    /// assessment, so the examples rotate through the pool instead of freezing on the first.
+    static var turn = Int.random(in: 0..<997)
+
     /// A row is "job; when it is worth paying for". A row without the second half shows alone.
+    /// A key filed more than once (`opus.2` three times) is a pool, and one of them shows per turn.
     static func detail(_ id: String) -> [(job: String, why: String)] {
         (1...5).compactMap {
-            let row = Rubric.value("detail", "\(id).\($0)", fallback: "")
-            guard !row.isEmpty else { return nil }
+            let pool = Rubric.values("detail", "\(id).\($0)").filter { !$0.isEmpty }
+            guard !pool.isEmpty else { return nil }
+            let row = pool[(turn + $0) % pool.count]
             let parts = row.split(separator: ";", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
             return (job: parts[0], why: parts.count > 1 ? parts[1] : "")
         }

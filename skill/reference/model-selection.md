@@ -171,6 +171,12 @@ resolves to Claude Opus 5.5 (it was Opus 5 when the choice was made). Until 5 Se
 | `high` | `high` |
 | `xhigh` | `high`, capped |
 
+Since 25 September 2026 a class 3 task that is not high stakes assesses at `medium` (the
+`effort-by-model` table), so its rewrite runs Opus 5.5 at `medium`. Anthropic measured Opus 5.5 at
+`medium` matching or beating Opus 5 at `high`, which is the setting the 4 September comparison
+chose, so this should not cost rewrite quality. It is still a claim from Anthropic's evals, not a
+re-run of that comparison.
+
 Two reasons for the cap, both from the effort doc:
 
 > "`xhigh` ... Long-running agentic and coding tasks (over 30 minutes) with token budgets in
@@ -239,16 +245,35 @@ openai = luna, sol, sol, astra
 4 = xhigh
 ```
 
+Effort names do not mean the same amount of thinking on every model. Since 25 September 2026 a
+row here overrides the class default for one model: "Claude Opus 5.5 at medium matches or exceeds
+Claude Opus 5 at high on coding and knowledge-work evaluations" (`prompting-claude-opus-5-5`), and
+`medium` is its default, so a class 3 task on Opus 5.5 gets `medium`. Stakes still floor it at
+`high`.
+
+```rubric
+@table effort-by-model
+opus.3 = medium
+```
+
 ```rubric
 @table thresholds
-class2from = 2
-class3from = 6
+class2from = -1
+class3from = 4
 class4from = 10
 wordcap = 6
 verylongbrief = 4000
 longbrief = 1200
 shortask = 220
 ```
+
+Until 25 September 2026 these read `class2from = 2` and `class3from = 6`, so a score of 0 meant
+class 1. A spoken or dictated prompt is nearly always under `shortask`, takes the -1, and
+rarely uses the jargon in `heavy`, so 27 of 30 test prompts (a cover letter, a debugging job, an
+app build, a landlord dispute) landed on Haiku. Now an unremarkable prompt lands on class 2,
+the family's sensible default, and Haiku has to be earned by a light signal: "summarise this"
+scores -3, "fix the grammar" -2, "write a LinkedIn post" -1. The `heavy` table gained everyday
+phrasings of judgement work the same day, so three of them, not five, reach class 3.
 
 Heavy signals mark work that needs real reasoning. A needle with a space or a hyphen matches
 anywhere in the text; a single word matches as a word prefix, so "optimi" catches optimise
@@ -295,6 +320,31 @@ keeps crashing | debugging
 not working | debugging
 doesn't work | debugging
 stops working | debugging
+wrong | debugging
+slow | performance work
+faster | performance work
+review | a review
+feedback | a review
+best way | a judgement call
+should i | a judgement call
+advice | a judgement call
+plan | planning
+planning | planning
+explain how | explanation
+explain why | explanation
+step by step | a walkthrough
+cover letter | writing for a reader
+reply to | writing for a reader
+in my voice | writing in a voice
+sound like me | writing in a voice
+persuad | persuasive writing
+agent | agentic work
+go through | a multi-item sweep
+app | building software
+website | building software
+landing page | building software
+dashboard | building software
+sync | integration
 ```
 
 Light signals mark mechanical, well-scoped work. Anthropic's phrase for the bottom of the
@@ -319,7 +369,11 @@ list of | listing
 bullet | listing
 rename | renaming
 convert | conversion
-translate to | translation
+translate | translation
+tag | tagging
+pull out | extraction
+out of this | extraction
+sort | sorting
 ```
 
 Until 16 September 2026 this list also held `json`, `csv` and `table`. They name the data, not
@@ -344,6 +398,12 @@ immigration | immigration status at stake
 security | security exposure
 vulnerab | security exposure
 credential | security exposure
+residence permit | residence at stake
+work permit | residence at stake
+blue card | residence at stake
+landlord | a dispute with money at stake
+deposit | money at stake
+lease | contract terms
 ```
 
 Phrases that contain a stakes word without the stakes. They are blanked out before the stakes
@@ -387,6 +447,10 @@ tax
 taxes
 plan
 plans
+app
+apps
+lease
+tag
 ```
 
 One line per tier, shown in the app's guide panel so the price of the recommendation is on
@@ -452,7 +516,7 @@ astra | $10 / $50 per M
 Up to five lines of hover detail per rung, written as concrete jobs rather than restatements
 of the docs. No line states a model's default effort, because the panel is short. Claude rungs
 give one example job per effort level, all five, each chosen to illustrate that level's
-published description. The shipped rows are generic everyday jobs. They read best when they
+published description. Since 25 September 2026 a key may repeat (`opus.2` twice): the repeats form a pool, and the app shows one per turn, starting at random on launch and moving on with every assessment, so the examples rotate instead of freezing. The shipped rows are generic everyday jobs. They read best when they
 are jobs you actually run, so replace them with your own (see "Your own data"). Since
 16 September 2026 each of those rows is `job; worth it: when`, and the app shows the second half
 as a dimmer line under the first. Fable at `low` and `medium` lean on two findings in
@@ -474,15 +538,20 @@ haiku.4 | Not for judgement calls
 haiku.5 | No effort parameter, it errors
 sonnet.1 | low · tag 300 support tickets by topic; worth it: bulk sorting you spot-check
 sonnet.2 | medium · tailor a CV to one job posting; worth it: everyday writing, low risk
+sonnet.2 | medium · plan a week of meals to a calorie target; worth it: routine, you check the numbers
 sonnet.3 | high · fix a script that crashes; worth it: one bug you can test fast
+sonnet.3 | high · fix a web route that returns errors; worth it: reproducible, one file
 sonnet.4 | xhigh · add an app screen end to end; worth it: a 30+ min run you won't watch
 sonnet.5 | max · last try before moving up to Opus; worth it: Sonnet stalls, stakes are low
 opus.1 | low · rename and file 40 scanned documents; worth it: fixed rules, a misfile costs you
 opus.2 | medium · draft a cover letter; worth it: a human reads it, tone matters
+opus.2 | medium · write outreach to someone you want to meet; worth it: one shot at a first impression
 opus.3 | high · find why a pipeline keeps retrying; worth it: cause unknown, spans several files
+opus.3 | high · find why a scheduled job fails silently; worth it: no error message, cause unknown
 opus.4 | xhigh · build a feature across 20 files; worth it: 30+ min run, rework costs more
 opus.5 | max · check a contract clause before signing; worth it: a wrong answer is expensive
-fable.1 | low · run a broad research sweep; worth it: often beats Opus per dollar here
+opus.5 | max · check a job offer against your visa's work limits; worth it: residence rides on it
+fable.1 | low · run a broad research sweep; worth it: only after Opus 5.5 missed sources
 fable.2 | medium · plan a multi-step data migration; worth it: close to high, for less
 fable.3 | high · design an encrypted data model; worth it: a wrong call means months of rework
 fable.4 | xhigh · rebuild a data pipeline overnight; worth it: hours unattended, one review at the end
