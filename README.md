@@ -3,7 +3,7 @@
 A small macOS app that rewrites a messy prompt into a clear one for a specific target model,
 using that model's own published prompting guidance, then checks the rewrite before showing it.
 
-Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol and Astra; and six targets with no model ladder, so no model pick: Google Gemini 3.5 Flash-Lite, 3.8 Flash and 3.1 Pro, Gemini extended thinking, Gemini Deep Research and Undermind.ai deep search.
+Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol and Astra; and four targets with no model ladder, so no model pick: Google Gemini 3.5 Flash-Lite, 3.8 Flash and 3.1 Pro, and Undermind.ai deep search. Gemini extended thinking and Deep Research are switches you add to a Gemini model, not separate models.
 
 ## What it does
 

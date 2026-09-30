@@ -40,6 +40,9 @@ struct Target: Identifiable, Hashable {
     /// False for products with no model ladder to score against (apps, a search tool): no model or
     /// effort pick is offered and the rewrite starts on the first press of Translate.
     var scored: Bool = true
+    /// A function of the maker's product (extended thinking, Deep Research) that is switched on with
+    /// a model, not chosen instead of one. Its notes are added to the model's.
+    var isFunction: Bool = false
 }
 
 let targets: [Target] = [
@@ -253,7 +256,7 @@ let targets: [Target] = [
                .init(label: "gemini-api/docs/pricing", url: "https://ai.google.dev/gemini-api/docs/pricing"),
            ],
            scored: false),
-    Target(id: "geminithink", label: "Gemini function: Extended thinking",
+    Target(id: "geminithink", label: "Extended thinking (Gemini function)",
            fileName: "google-prompting-guide.md",
            generalHeader: "## General principles (current Gemini models)",
            specificHeader: "## Gemini extended thinking notes",
@@ -271,8 +274,9 @@ let targets: [Target] = [
                .init(label: "gemini-api/docs/gemini-3", url: "https://ai.google.dev/gemini-api/docs/gemini-3"),
                .init(label: "gemini.google/subscriptions", url: "https://gemini.google/subscriptions/"),
            ],
-           scored: false),
-    Target(id: "geminiresearch", label: "Gemini function: Deep Research",
+           scored: false,
+           isFunction: true),
+    Target(id: "geminiresearch", label: "Deep Research (Gemini function)",
            fileName: "google-prompting-guide.md",
            generalHeader: "## General principles (current Gemini models)",
            specificHeader: "## Gemini Deep Research notes",
@@ -291,7 +295,8 @@ let targets: [Target] = [
                .init(label: "gemini.google/overview/deep-research", url: "https://gemini.google/overview/deep-research/"),
                .init(label: "gemini-api/docs/changelog", url: "https://ai.google.dev/gemini-api/docs/changelog"),
            ],
-           scored: false),
+           scored: false,
+           isFunction: true),
     Target(id: "undermind", label: "Undermind.ai deep search",
            fileName: "undermind-search-guide.md",
            generalHeader: "## General principles (writing a search request)",
@@ -645,7 +650,7 @@ enum RewritePipeline {
 
     /// Harness L4 bounce loop: rewrite, check, and on a failed check send the draft back with the
     /// reasons. The script sets the attempt cap; the last draft is always returned.
-    static func run(target: Target, messy: String, context: String, suggested: String?, effort: String,
+    static func run(target: Target, messy: String, context: String, suggested: String?, effort: String, functions: [Target] = [],
                     status: (String) -> Void = { _ in }) async throws -> RewriteOutcome {
         let forChecker = checkContext(context, target: target, suggested: suggested)
         var attempt = 1
@@ -655,7 +660,7 @@ enum RewritePipeline {
         while true {
             status(attempt == 1 ? "Rewriting..." : "Retrying (\(attempt))...")
             let request = try buildRequest(target: target, messyPrompt: messy, extraContext: context,
-                                           suggestedEffort: suggested, retry: retry)
+                                           suggestedEffort: suggested, retry: retry, functions: functions)
             output = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
             if output.isEmpty {
                 throw NSError(domain: "RosettaPrompt", code: 3, userInfo: [
@@ -674,9 +679,16 @@ enum RewritePipeline {
 
 @MainActor
 func buildRequest(target: Target, messyPrompt: String, extraContext: String, suggestedEffort: String?,
-                  retry: (draft: String, feedback: String)? = nil) throws -> String {
+                  retry: (draft: String, feedback: String)? = nil, functions: [Target] = []) throws -> String {
     let general = try loadSection(fileName: target.fileName, header: target.generalHeader)
-    let specific = try loadSection(fileName: target.fileName, header: target.specificHeader)
+    var specific = try loadSection(fileName: target.fileName, header: target.specificHeader)
+    if !functions.isEmpty {
+        specific += "\n\nThe user will run this prompt with " + functions.map(\.chipLabel).joined(separator: " and ").replacingOccurrences(of: "+ ", with: "")
+            + " switched on. Write for the model above and these Gemini functions together."
+        for f in functions {
+            specific += "\n\n" + ((try? loadSection(fileName: f.fileName, header: f.specificHeader)) ?? "")
+        }
+    }
     // Optional: an older reference file may not carry this section, and a rewrite without it is
     // still a valid rewrite, so a missing section must not fail the run.
     let avoid = (try? loadSection(fileName: target.fileName, header: target.avoidHeader)) ?? ""
@@ -1245,8 +1257,19 @@ final class TranslatorState: ObservableObject {
     // A guide that outlives the thing it judged is worse than no guide.
     @Published var messyPrompt: String = "" { didSet { clearAdvice() } }
     @Published var extraContext: String = "" { didSet { clearAdvice() } }
-    @Published var selectedTarget: Target = targets[1] { didSet { clearAdvice() } } // Opus 5.5 default: general purpose, no assumed audience
+    @Published var functionIDs: Set<String> = [] { didSet { clearAdvice() } }
+    @Published var selectedTarget: Target = targets[1] { didSet { if selectedTarget.maker != .google { functionIDs = [] }; clearAdvice() } } // Opus 5.5 default: general purpose, no assumed audience
     @Published var result: String = ""
+    /// The Gemini functions switched on with the selected model, in a fixed order.
+    var activeFunctions: [Target] { targets.filter { $0.isFunction && functionIDs.contains($0.id) } }
+    /// The selected model plus its switched-on functions, for buttons and headers.
+    var selectedLabel: String {
+        ([selectedTarget.label] + activeFunctions.map(\.chipLabel)).joined(separator: " ")
+    }
+    func toggleFunction(_ f: Target) {
+        if selectedTarget.maker != .google { selectedTarget = targets.first { $0.id == "gemini" } ?? selectedTarget }
+        if functionIDs.contains(f.id) { functionIDs.remove(f.id) } else { functionIDs.insert(f.id) }
+    }
     @Published var hoveredRung: String?  // the guide ladder rung under the pointer; see GuidePanel
     @Published var isRunning: Bool = false
     @Published var errorText: String = ""
@@ -1400,6 +1423,7 @@ final class TranslatorState: ObservableObject {
             do {
                 let outcome = try await RewritePipeline.run(target: target, messy: messy, context: context,
                                                             suggested: suggested, effort: effort,
+                                                            functions: activeFunctions,
                                                             status: { self.status = $0 })
                 let check = outcome.check
                 self.result = outcome.output
@@ -1658,7 +1682,7 @@ struct GuidePanel: View {
 
                 if state.awaitingChoice && !advice.verdict.needsDecision {
                     Button { state.rewriteAnyway() } label: {
-                        Text("Translate for \(state.selectedTarget.label)")
+                        Text("Translate for \(state.selectedLabel)")
                             .font(.caption.weight(.semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -1895,8 +1919,10 @@ struct MakerPicker: View {
 
                     HStack(spacing: 6) {
                         ForEach(targets.filter { $0.maker == maker }) { target in
-                            TargetChip(target: target, selected: state.selectedTarget.id == target.id) {
-                                state.selectedTarget = target
+                            TargetChip(target: target,
+                                       selected: target.isFunction ? state.functionIDs.contains(target.id)
+                                                                   : state.selectedTarget.id == target.id) {
+                                if target.isFunction { state.toggleFunction(target) } else { state.selectedTarget = target }
                             }
                         }
                     }

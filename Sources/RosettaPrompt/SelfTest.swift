@@ -44,6 +44,16 @@ enum SelfTest {
             report(maker.hosts.contains(home) || maker == .google, "\(maker.name) homepage is on its own site", home)
         }
 
+        // Gemini functions combine with a model: one request carries the model's notes and both functions'.
+        if let flash = targets.first(where: { $0.id == "geminipro" }) {
+            let fns = targets.filter(\.isFunction)
+            let combined = (try? buildRequest(target: flash, messyPrompt: generalTask, extraContext: "",
+                                              suggestedEffort: nil, functions: fns)) ?? ""
+            report(combined.contains("Gemini 3.1 Pro notes") || combined.contains("preview model"), "combined request has the model notes")
+            report(combined.contains("autonomously plans"), "combined request has the Deep Research notes")
+            report(combined.contains("thinking_level"), "combined request has the extended thinking notes")
+        }
+
         for target in targets {
             print("\n== \(target.label)  [\(target.maker.name), \(target.scored ? "scored" : "product")]")
 
