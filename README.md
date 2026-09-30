@@ -3,7 +3,7 @@
 A small macOS app that rewrites a messy prompt into a clear one for a specific target model,
 using that model's own published prompting guidance, then checks the rewrite before showing it.
 
-Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol and Astra; and four products with no model ladder, so no model pick: the Claude app, the ChatGPT app, Google Gemini 3.8 Flash and Undermind.ai deep search.
+Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol and Astra; and six targets with no model ladder, so no model pick: Google Gemini 3.5 Flash-Lite, 3.8 Flash and 3.1 Pro, Gemini extended thinking, Gemini Deep Research and Undermind.ai deep search.
 
 ## What it does
 
@@ -19,7 +19,7 @@ Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol a
 4. **Learns from misses and hits.** "Wrong?" files the result as a rejected calibration case and
    "Right" as an approved one, on your machine.
 5. **Groups targets by maker** (Anthropic, OpenAI, Google, Undermind). Each group links to the
-   maker's own site, and "Copy and open" sends a finished rewrite to claude.ai, chatgpt.com, Gemini
+   maker's own site, and "Copy and open" sends a finished rewrite to the Claude site, chatgpt.com, Gemini
    or Undermind.
 
 The same workflow is available inside Claude Code as the `rosetta-prompt` skill.

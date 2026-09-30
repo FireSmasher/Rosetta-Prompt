@@ -36,8 +36,8 @@ TARGET_LABELS = {
     "fable": "Claude Fable 5.1", "opus": "Claude Opus 5.5", "sonnet": "Claude Sonnet 5.5",
     "haiku": "Claude Haiku 4.5", "sol": "GPT-6.1 Sol",
     "luna": "GPT-6 Luna", "astra": "GPT-6 Astra",
-    "claudeapp": "Claude app (claude.ai)", "chatgpt": "ChatGPT app (chatgpt.com)",
-    "gemini": "Google Gemini 3.8 Flash", "undermind": "Undermind.ai deep search",
+    "gemini": "Google Gemini 3.8 Flash", "geminilite": "Google Gemini 3.5 Flash-Lite", "geminipro": "Google Gemini 3.1 Pro",
+    "geminithink": "Gemini extended thinking", "geminiresearch": "Gemini Deep Research", "undermind": "Undermind.ai deep search",
 }
 
 DEFAULT_LIMITS = {
@@ -174,8 +174,6 @@ OPUS_VERIFY = re.compile(r"double[- ]check|re-?verify|verification step|verify y
 REVIEW_FILTER = re.compile(r"only report (high|critical)[- ]severity|\bbe conservative\b|don'?t nitpick", re.I)
 THINK_ALOUD = re.compile(r"think (step[- ]by[- ]step|aloud|out loud)|chain[- ]of[- ]thought|reason step[- ]by[- ]step|"
                          r"explain your (reasoning|thinking) (first|before)", re.I)
-APP_SETTING = re.compile(r"\b(temperature|top[_-]?p|max[_ -]?tokens|stop sequences?|reasoning[_ ]effort|"
-                         r"--effort|effort (level|parameter|setting))\b", re.I)
 BOOLEAN_QUERY = re.compile(r"\b[\w\"'()-]+\s+(AND|OR|NOT)\s+[\w\"'()-]+\s+(AND|OR|NOT)\s+[\w\"'()-]+|\bNEAR/\d+\b")
 SEARCH_STRUCTURE = re.compile(r"^\s*you are (a|an|the)\b|</?(task|instructions|context|query|constraints)\b|"
                               r"\b(low|medium|high|xhigh|max)[- ]effort\b", re.I | re.M)
@@ -251,17 +249,11 @@ def code_checks(target, original, rewrite, context):
             blocking.append(finding("target.haiku_effort", m.group(0),
                                     "Haiku 4.5 has no effort setting. Remove the effort line.",
                                     [m.start(), m.end()]))
-    if target in ("luna", "sol", "astra", "gemini"):
+    if target in ("luna", "sol", "astra", "gemini", "geminilite", "geminipro", "geminithink"):
         m = THINK_ALOUD.search(rewrite)
         if m and not THINK_ALOUD.search(source):
             blocking.append(finding("target.think_aloud", m.group(0),
                                     "This is a reasoning model and thinks before it answers. Remove the think-aloud instruction.",
-                                    [m.start(), m.end()]))
-    if target in ("claudeapp", "chatgpt"):
-        m = APP_SETTING.search(rewrite)
-        if m and not APP_SETTING.search(source):
-            blocking.append(finding("target.app_setting", m.group(0),
-                                    "The app has no such control in a chat box. Remove the API setting from the prompt.",
                                     [m.start(), m.end()]))
     if target == "undermind":
         m = BOOLEAN_QUERY.search(rewrite)

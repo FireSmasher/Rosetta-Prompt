@@ -68,7 +68,6 @@ rewrite was right" files an approved one.
 | `target.haiku_effort` | Haiku 4.5 target and the rewrite names an effort level |
 | `target.fable_antiformat` | Fable 5.1 target and the rewrite adds a blanket no-markdown/no-lists rule the original didn't ask for |
 | `target.think_aloud` | GPT-6 or Gemini target and the rewrite adds "think step by step", "chain of thought" or similar that the original didn't contain (both are reasoning models) |
-| `target.app_setting` | Claude app or ChatGPT app target and the rewrite names temperature, top_p, max tokens, stop sequences or an effort setting (a chat box has none of those controls) |
 | `target.undermind_boolean` | Undermind target and the rewrite turns the request into a Boolean query string |
 | `target.undermind_structure` | Undermind target and the rewrite adds a role line, XML tags or an effort level (the Undermind guide says none of it has a published effect) |
 

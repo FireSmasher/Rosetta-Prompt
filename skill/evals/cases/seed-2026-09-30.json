@@ -6,7 +6,9 @@
     "context": "",
     "rewrite": "Compare the two database designs below for a small shop and recommend one. Think step by step before you answer, then give the recommendation and the main reason.",
     "expected": "Rejected",
-    "must_fail": ["target.think_aloud"],
+    "must_fail": [
+      "target.think_aloud"
+    ],
     "why": "GPT-6 reasons internally; adding a think-aloud instruction is the over-application the OpenAI reasoning guide warns about."
   },
   {
@@ -26,7 +28,9 @@
     "context": "",
     "rewrite": "Explain the most likely causes of a dense sourdough loaf. Think aloud step by step, then list the fixes in order of likelihood.",
     "expected": "Rejected",
-    "must_fail": ["target.think_aloud"],
+    "must_fail": [
+      "target.think_aloud"
+    ],
     "why": "Gemini 3 is a thinking model; the Gemini guide calls step-by-step think-aloud scaffolding unnecessary."
   },
   {
@@ -40,53 +44,15 @@
     "why": "Plain, scoped, no scaffolding."
   },
   {
-    "id": "T-0005-claudeapp-api-setting",
-    "target": "claudeapp",
-    "original": "help me write a short toast for my sister's wedding, funny but not cringe",
-    "context": "",
-    "rewrite": "Write a short wedding toast for my sister. Set temperature to 0.9 and keep it under 150 words, funny but not cringe.",
-    "expected": "Rejected",
-    "must_fail": ["target.app_setting"],
-    "why": "The Claude app has no temperature control; an API setting in the prompt does nothing."
-  },
-  {
-    "id": "T-0006-claudeapp-clean",
-    "target": "claudeapp",
-    "original": "help me write a short toast for my sister's wedding, funny but not cringe",
-    "context": "",
-    "rewrite": "Write a short toast for my sister's wedding, under 150 words, funny but not cringe. Ask me two or three questions about her first if you need details to make it personal.",
-    "expected": "Approved",
-    "must_fail": [],
-    "why": "Scoped, grounded, asks rather than invents details."
-  },
-  {
-    "id": "T-0007-chatgpt-api-setting",
-    "target": "chatgpt",
-    "original": "give me a packing list for a week of hiking in cold weather",
-    "context": "",
-    "rewrite": "Give me a packing list for a week of cold-weather hiking. Use a high reasoning effort setting and max tokens of 800.",
-    "expected": "Rejected",
-    "must_fail": ["target.app_setting"],
-    "why": "Depth is chosen in the ChatGPT model picker, not in the prompt; token limits are not a chat setting."
-  },
-  {
-    "id": "T-0008-chatgpt-clean",
-    "target": "chatgpt",
-    "original": "give me a packing list for a week of hiking in cold weather",
-    "context": "",
-    "rewrite": "Give me a packing list for a week of hiking in cold weather, grouped by clothing, sleeping, cooking and safety. Mark anything that is optional.",
-    "expected": "Approved",
-    "must_fail": [],
-    "why": "Scoped, states the output shape, no app-inapplicable settings."
-  },
-  {
     "id": "T-0009-undermind-boolean",
     "target": "undermind",
     "original": "find papers on whether spaced repetition helps medical students remember anatomy",
     "context": "",
     "rewrite": "(\"spaced repetition\" AND \"medical students\" AND anatomy) OR (retrieval AND anatomy AND education)",
     "expected": "Rejected",
-    "must_fail": ["target.undermind_boolean"],
+    "must_fail": [
+      "target.undermind_boolean"
+    ],
     "why": "Undermind takes a plain-language research request, not a Boolean query."
   },
   {

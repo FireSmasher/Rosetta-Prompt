@@ -9,12 +9,6 @@ Primary sources, OpenAI's own official docs, re-verified 24 September 2026:
 - https://developers.openai.com/api/docs/models (the models page: "If you're not sure where to start, use GPT-6 Astra... Choose GPT-6 Sol to balance intelligence and cost, or GPT-6 Luna for cost-sensitive, high-volume workloads.")
 - https://developers.openai.com/api/docs/changelog (release dates: GPT-6 Astra 3 September 2026, GPT-6 Sol and Luna 22 September 2026)
 
-Sources for the ChatGPT app section below (read 30 September 2026):
-- https://help.openai.com/en/articles/6825453-chatgpt-release-notes (updated 29 September 2026)
-- https://help.openai.com/en/articles/8096356-chatgpt-custom-instructions
-- https://openai.com/chatgpt/overview/
-- https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api (API era, used only for generic advice)
-
 Fetch check, 30 September 2026: help.openai.com and developers.openai.com both read through r.jina.ai (`curl -s https://r.jina.ai/<url>`) without a wall; the HTTP 403 seen on 4 September 2026 no longer applies. The GPT-6 sections below were last read in full on 24 September 2026; on 30 September only the models page, the changelog, `guides/latest-model` and the ChatGPT release notes were re-read, for the release changes listed under Model facts.
 
 Confidence: developers.openai.com carries genuine per-model specs and one family-wide prompting guide, all primary. OpenAI publishes no per-tier behaviour split for GPT-6, and says the guide's behaviour notes were observed on Astra. Net: 85% for Astra, 80% for Sol and Luna (GPT-6.1 Sol was released 29 September 2026 and Luna on 22 September, guidance not observed on them directly).
@@ -118,20 +112,6 @@ Released 3 September 2026 as a general API model (the changelog lists it as "Rel
 - The GPT-6 family behaviour notes in General principles were observed on Astra itself, so apply them with full confidence here.
 - Astra runs asynchronous misalignment monitoring during agent work, which can raise safety alerts or stop a conversation. A prompt for an autonomous run should state its purpose and limits plainly rather than leave intent to inference.
 - **Migrating a prompt to Astra:** keep the current reasoning effort as the baseline (Astra has no `none`, so start at `low` if the old prompt used it), and remove obsolete or contradictory scaffolding rather than layering new instructions on top.
-
-## ChatGPT app-specific notes
-
-The chatgpt.com product, not the API. No ChatGPT prompting guide was found: the only prompt advice read is an API-era help page, so wording follows "General principles" above and this section adds only what the app changes. Confidence is 60%: current first-party product facts (help centre, 30 Sep 2026), no dedicated guide, no independent check. The app's models differ from the API targets: Chat ran GPT-5.6 Sol for Plus and Pro and GPT-5.6 Luna for Free and Go as of 3 September 2026 (release notes, not re-checked since), while Work and Codex use separate models (GPT-6 Sol and Luna from 22 September 2026, GPT-6.1 Sol rolling out there from 29 September). An API target and an app model with the same name are different offerings. Check the release notes before assuming which model answers.
-
-**Depth is set by the user, not the prompt.** The model picker offers Instant, Medium, High, Extra High (Pro only), Pro Standard and Pro Extended, and the automatic Instant to Thinking switch was retired for Plus and Pro on 11 September 2026. A rewrite for ChatGPT should not try to buy depth with "think step by step"; if a task is hard, the fix is a higher picker setting, which only the user can make. (Inference from the picker, not stated by a page.)
-
-**Standing instructions go in settings.** Custom instructions live under Settings, Personalization (web and desktop) or Customize ChatGPT (mobile), apply to all chats at once, and are capped at 1,500 characters on Free and Go and 5,000 on paid plans. They are not shared with viewers of a shared link. The API does not use them, it uses system messages. Keep a one-off task in the prompt.
-
-**Memory and Projects.** Memory is an editable summary. Temporary chats are non-personalized by default. Projects can use default memory or project-only memory, and shared projects are project-only. Restate what a task depends on rather than assuming recall.
-
-**Agents.** For agent tasks the release notes say Astra runs extra safety monitoring that can pause a conversation, so state goal, permissions and limits plainly.
-
-**Not read.** Canvas, deep research and agent mode help articles, and per-plan message limits. Do not state them from this section.
 
 ## What NOT to over-apply
 

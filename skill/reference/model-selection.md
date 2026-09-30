@@ -360,7 +360,6 @@ sound like me | writing in a voice
 persuad | persuasive writing
 agent | agentic work
 go through | a multi-item sweep
-app | building software
 website | building software
 landing page | building software
 dashboard | building software
@@ -557,10 +556,8 @@ every link must land on the maker's own domain (the self test enforces that).
 
 Levels are what each target really has, from `lab-levels`: Claude Fable, Opus and Sonnet have
 `low` to `max`. Haiku 4.5 has none. GPT-6 Luna has `none` to `max`, GPT-6.1 Sol and Astra `low` to
-`max`. The Gemini 3.8 Flash row uses its three thinking levels. The ChatGPT app uses its model
-picker (Instant, Medium, High, Extra High, Pro Standard, Pro Extended), set by the user. The Claude
-app and Undermind have no effort setting; the Claude app has one row, and Undermind has its two
-depths, quick and deep search. OpenAI's effort table is stated once for the parameter, so the same
+`max`. Gemini 3.5 Flash-Lite has four thinking levels (minimal to high), 3.8 Flash and 3.1 Pro three (low to high). Extended thinking has `high` and the Ultra plan's Deep Think, and Deep Research has its standard and Max versions. Undermind has no effort setting, only its two depths, quick and deep search.
+OpenAI's effort table is stated once for the parameter, so the same
 level sentence appears under Luna, Sol and Astra where the model page adds nothing level specific.
 (Until 30 September 2026 this file said OpenAI publishes no per level guidance. The reasoning guide
 has carried a per level table, so that statement was wrong and is corrected here.)
@@ -574,20 +571,20 @@ haiku = none
 luna = none, low, medium, high, xhigh, max
 sol = low, medium, high, xhigh, max
 astra = low, medium, high, xhigh, max
-claudeapp = app
-chatgpt = instant, medium, high, extrahigh, prostandard, proextended
 gemini = low, medium, high
+geminilite = minimal, low, medium, high
+geminipro = low, medium, high
+geminithink = high, deepthink
+geminiresearch = dr, drmax
 undermind = quick, deep
 ```
 
 ```rubric
 @table lab-level-label
 none | none
-app | in a project
-instant | Instant
-extrahigh | Extra High
-prostandard | Pro Standard
-proextended | Pro Extended
+deepthink | Deep Think
+dr | Deep Research
+drmax | Research Max
 quick | Quick search
 deep | Deep search
 ```
@@ -626,16 +623,20 @@ astra.medium | GPT-6 Astra is our most capable model for the most demanding work
 astra.high | Recommended for complex workflows and agentic tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
 astra.xhigh | Deep research, asynchronous workflows and agentic tasks that require long runs. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
 astra.max | Maximum reasoning for your most complex tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
-claudeapp.app | Project instructions help Claude understand the specific context and requirements for a particular project. These instructions only apply to chats within that project. ;; support: personalization features ;; https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features
-chatgpt.instant | Users have the ability to decide whether Instant auto-switches to Medium for higher reasoning when required. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.medium | Thinking Standard is now Medium ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.high | Thinking Extended is now High ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.extrahigh | Thinking Heavy is now Extra High. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.prostandard | Pro Standard and Pro Extended remain available under Pro. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.proextended | Pro Standard and Pro Extended remain available under Pro. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-gemini.low | Simple tasks: Use minimal or low thinking for fact retrieval or classification ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
-gemini.medium | Moderate tasks: Use default thinking for comparing concepts or creative reasoning ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
-gemini.high | Complex tasks: Use maximum thinking for advanced coding, math, or multi-step planning ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+geminilite.minimal | Optimized for response speed. Chat-like use cases, quick factual answers, simpler tool calls. ;; whats-new-gemini-3.5 (written for 3.5 Flash) ;; https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+geminilite.low | Code and agentic tasks that require lower latency and fewer steps. Also works well for analysis and writing tasks that require some thinking. ;; whats-new-gemini-3.5 (written for 3.5 Flash) ;; https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+geminilite.medium | Best quality for most tasks. ;; whats-new-gemini-3.5 (written for 3.5 Flash) ;; https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+geminilite.high | Maximizes the model's ability to think and use tools. ;; whats-new-gemini-3.5 (written for 3.5 Flash) ;; https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+gemini.low | Reduces time-to-answer for latency-critical tasks like incident response pipelines, real-time chat, writing drafts, and fast data analysis. ;; latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
+gemini.medium | Best quality for most tasks. Recommended for complex code and agentic use cases, providing higher first-pass accuracy. ;; latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
+gemini.high | Maximizes the model's reasoning and tool orchestration capabilities. Best for deep reasoning, mathematics, and difficult multi-step tasks. ;; latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
+geminipro.low | Minimizes latency and cost. Best for simple instruction following, chat, or high-throughput applications. ;; gemini-3 guide ;; https://ai.google.dev/gemini-api/docs/gemini-3
+geminipro.medium | Balanced thinking for most tasks. ;; gemini-3 guide ;; https://ai.google.dev/gemini-api/docs/gemini-3
+geminipro.high | If thinking_level is not specified, Gemini 3 will default to high. ;; gemini-3 guide ;; https://ai.google.dev/gemini-api/docs/gemini-3
+geminithink.high | Complex tasks: Use maximum thinking for advanced coding, math, or multi-step planning ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+geminithink.deepthink | Bis zu 20-mal höhere Nutzungslimits in Gemini als beim Pro-Abo sowie vor allen anderen Zugriff auf erweiterte Funktionen wie Deep Think ;; gemini.google/subscriptions (Ultra plan) ;; https://gemini.google/subscriptions/
+geminiresearch.dr | The Gemini Deep Research agent autonomously plans, executes, and synthesizes multi-step research tasks. ;; gemini-api/docs/deep-research ;; https://ai.google.dev/gemini-api/docs/deep-research
+geminiresearch.drmax | Maximum comprehensiveness for automated context gathering and synthesis. ;; gemini-api/docs/deep-research ;; https://ai.google.dev/gemini-api/docs/deep-research
 undermind.quick | search_papers is your main workhorse. It performs direct semantic search against titles and abstracts. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
 undermind.deep | Use it for self-contained queries that demand comprehensive, carefully ranked results ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
 ```
@@ -665,23 +666,18 @@ sol.max | If you are currently using xhigh, evaluate if max results in stronger 
 astra.high | Depending on the complexity of the task, evaluate both medium and high. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
 astra.xhigh | Only use when your evals show a clear benefit that justifies the extra latency and cost. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
 astra.max | If you are currently using xhigh, evaluate if max results in stronger performance ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
-claudeapp.app | Context is not shared across chats within a project unless the information is added into the project knowledge base. ;; support: create and manage projects ;; https://support.claude.com/en/articles/9519177-how-can-i-create-and-manage-projects
-chatgpt.instant | We're retiring automatic switching from Instant to Thinking (reasoning) for ChatGPT Plus and Pro users globally. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.extrahigh | Extra High [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.prostandard | Pro Standard [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-chatgpt.proextended | Pro Extended [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
-gemini.low | Gemini 3.8 Flash can use more tokens on longer running and complex tasks, by design. ;; gemini-api/docs/latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
-gemini.high | If the model hits this limit while reasoning, it stops generating with status "incomplete" and returns truncated or empty output (while still billing for any thinking tokens generated). ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+gemini.medium | Gemini 3.8 Flash can use more tokens on longer running and complex tasks, by design. ;; latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
+geminithink.high | Important: You cannot use both thinking_level and the legacy thinking_budget parameter in the same request. Doing so will return a 400 error. ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+geminiresearch.dr | Structured output: The Deep Research agent currently doesn't support structured outputs. ;; gemini-api/docs/deep-research ;; https://ai.google.dev/gemini-api/docs/deep-research
 undermind.quick | A narrow or empty search_papers result does not mean the relevant literature is absent. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
-undermind.deep | for which paper relevance can be evaluated without reading the full texts. It generally takes 2-5 minutes. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
 ```
 
 ```rubric
 @table lab-cost
-opus.low | 33 ;; about a third of the cost of high, about 8 points lower on SWE-bench Pro
-opus.medium | 70 ;; about 70% of the cost of high, about 2.5 points lower on SWE-bench Pro
-opus.high | 100 ;; the baseline
-opus.xhigh | 250 ;; 2.5 times the cost of high, about 1.4 points higher on SWE-bench Pro
+opus.low | File 40 scans by fixed rules ;; about a third of the cost of high, about 8 points lower on SWE-bench Pro
+opus.medium | First note to someone who opens doors ;; about 70% of the cost of high, about 2.5 points lower on SWE-bench Pro
+opus.high | Find why a nightly job dies silently ;; the baseline
+opus.xhigh | Wire an apply flow, submit included ;; 2.5 times the cost of high, about 1.4 points higher on SWE-bench Pro
 source | scored about 2.5 points lower at its default, medium, for about 70% of the cost, and about 8 points lower at low for about a third of the cost; xhigh scored about 1.4 points higher for 2.5 times the cost of high ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
 ```
 
@@ -694,50 +690,54 @@ source | at about a fifth of Claude Opus 5.5's cost per question, with 63% accur
 
 ```rubric
 @table lab
-fable.low | Sweep fifty job boards for roles nobody advertises ;; a cheap wide sweep, and you read the shortlist
-fable.medium | Sort sixty papers into themes before a supervisor meeting ;; near high quality for less when a cheaper model loses the thread
-fable.high | Redesign how three of your tools hand work to each other ;; several things depend on the answer
-fable.xhigh | Rebuild a data pipeline overnight while you sleep ;; hours unattended, one review in the morning
-fable.max | Stress-test your argument the night before submitting ;; the one answer you would stake a grade on
-opus.low | File forty scanned documents by fixed rules ;; fixed rules, and a misfile costs you later
-opus.medium | Write a first note to someone who could open a door ;; one shot at a first impression
-opus.high | Find why a scheduled job dies silently at night ;; a silent failure, the cause could be anywhere
-opus.xhigh | Wire an application flow end to end, submit button included ;; a bad submit is public
-opus.max | Check a job offer against the limits of your permit ;; a wrong answer puts your residence at risk
-sonnet.low | Sort a week of time blocks into categories ;; you glance over the result anyway
-sonnet.medium | Turn a training week into a shopping list at your calories ;; routine, and you check the numbers
-sonnet.high | Fix the web route that returns errors on empty rows ;; one file, and a test tells you fast
-sonnet.xhigh | Build a waitlist page while you are at the gym ;; many small steps, nothing irreversible
-sonnet.max | One last pass at a stubborn bug before you pay for Opus ;; cheaper than Opus if it lands
-haiku.none | Label a backlog of thousands of emails by sender ;; checkable output, and a wrong label costs nothing
-luna.none | Turn a shop receipt into rows for a spending log ;; speed beats thought when the rows are fixed
-luna.low | Tag 300 job postings as part time or full time ;; a quick, cheap sort
-luna.medium | Pull dates and amounts out of a month of bank exports ;; cheap, and you check the totals
-luna.high | Reconcile a bank export against a workbook and explain the gaps ;; rarely, Sol is the next rung
-luna.xhigh | Find near duplicates across 500 tags ;; only if your evals show a gain
-luna.max | Re-check a finished relabel, label by label ;; usually a waste, try Sol first
-sol.low | Fix a typo level bug in a small script ;; a quick loop
-sol.medium | Summarise a 40 page reading before class ;; the default, balanced
-sol.high | Debug why a chain of steps breaks across three files ;; complex debugging, deep planning
-sol.xhigh | Review your own diff for security holes before you push ;; a public repo is forever
-sol.max | Plan a storage migration with every edge case ;; only if xhigh missed something
-astra.low | Sanity-check a meal plan against a protein target ;; rarely, Astra price for a simple job
-astra.medium | Plan a move across six periods in two cities ;; frontier model at its default effort
-astra.high | Pressure-test a permit plan against its conditions ;; a wrong answer costs residence
-astra.xhigh | Audit a whole register for contradictions overnight ;; a long run with one review
-astra.max | Decide the next city with every assumption attacked ;; it decides where you live
-claudeapp.app | Put a project's method rules into its instructions once ;; every chat in that project starts informed
-chatgpt.instant | Ask what a term on a payslip means ;; quick, and a wrong answer is cheap
-chatgpt.medium | Draft a short email to a parent: only the ask ;; balanced, and you edit it anyway
-chatgpt.high | Read a lease clause for what it lets the landlord do ;; a hard read, a wrong read costs a deposit
-chatgpt.extrahigh | Sanity-check a training block against your health flags ;; Pro plans only, use it when the answer touches your body
-chatgpt.prostandard | Read a 30 page letter and list every deadline ;; a missed deadline costs more than the wait
-chatgpt.proextended | Lay out a full launch plan with its risks in one sitting ;; the slowest setting, for the plan you would argue about for a week
-gemini.low | Classify a pile of time labels ;; retrieval grade work
-gemini.medium | Compare two hoodie suppliers side by side ;; moderate work, the default
-gemini.high | Work out unit economics with returns and VAT ;; multi step planning
-undermind.quick | Check what exists on graduates moving into work ;; a few top results in seconds
-undermind.deep | Find every paper on post-study retention for a thesis ;; 2 to 5 minutes, one well-aimed search usually covers it
+fable.low | Sweep 50 job boards for hidden roles ;; a cheap wide sweep, and you read the shortlist
+fable.medium | Sort 60 papers into themes ;; near high quality for less when a cheaper model loses the thread
+fable.high | Redesign how 3 tools hand off work ;; several things depend on the answer
+fable.xhigh | Rebuild a data pipeline overnight ;; hours unattended, one review in the morning
+fable.max | Attack your thesis the night before ;; the one answer you would stake a grade on
+opus.low | File 40 scans by fixed rules ;; fixed rules, and a misfile costs you later
+opus.medium | First note to someone who opens doors ;; one shot at a first impression
+opus.high | Find why a nightly job dies silently ;; a silent failure, the cause could be anywhere
+opus.xhigh | Wire an apply flow, submit included ;; a bad submit is public
+opus.max | Check an offer against your permit ;; a wrong answer puts your residence at risk
+sonnet.low | Sort a week of time blocks ;; you glance over the result anyway
+sonnet.medium | Turn a training week into groceries ;; routine, and you check the numbers
+sonnet.high | Fix the route that 500s on empty rows ;; one file, and a test tells you fast
+sonnet.xhigh | Build a waitlist page at the gym ;; many small steps, nothing irreversible
+sonnet.max | One last bug pass before Opus ;; cheaper than Opus if it lands
+haiku.none | Label 5,000 emails by sender ;; checkable output, and a wrong label costs nothing
+luna.none | Receipt into spending-log rows ;; speed beats thought when the rows are fixed
+luna.low | Tag 300 postings part or full time ;; a quick, cheap sort
+luna.medium | Pull dates and amounts from exports ;; cheap, and you check the totals
+luna.high | Reconcile a bank export, explain gaps ;; rarely, Sol is the next rung
+luna.xhigh | Find near duplicates in 500 tags ;; only if your evals show a gain
+luna.max | Re-check a relabel, label by label ;; usually a waste, try Sol first
+sol.low | Fix a typo bug in a small script ;; a quick loop
+sol.medium | Summarise a 40 page reading ;; the default, balanced
+sol.high | Debug a break across three files ;; complex debugging, deep planning
+sol.xhigh | Audit your diff for security holes ;; a public repo is forever
+sol.max | Plan a storage move, every edge case ;; only if xhigh missed something
+astra.low | Check a meal plan vs protein target ;; rarely, Astra price for a simple job
+astra.medium | Plan a move across six periods ;; frontier model at its default effort
+astra.high | Pressure-test a permit plan ;; a wrong answer costs residence
+astra.xhigh | Audit a register for contradictions ;; a long run with one review
+astra.max | Choose a city, attack each premise ;; it decides where you live
+geminilite.minimal | Translate 500 product lines ;; speed and price beat thought
+geminilite.low | Extract fields from 300 invoices ;; simple extraction, fewer steps
+geminilite.medium | Summarise 50 support tickets ;; cheap, and you skim the result
+geminilite.high | Parse a messy 40 page PDF into rows ;; rarely, Flash is the next rung
+gemini.low | Draft a short reply, fast ;; latency matters more than depth
+gemini.medium | Compare two suppliers side by side ;; moderate work, the default
+gemini.high | Unit economics with returns and VAT ;; multi step planning
+geminipro.low | Answer a question from one document ;; simple instruction following
+geminipro.medium | Review a 500 line pull request ;; balanced, and you read the diff anyway
+geminipro.high | Debug a flaky test across modules ;; the default, and the hard cases need it
+geminithink.high | Check a tricky proof or derivation ;; maximum thinking, no visible scripting
+geminithink.deepthink | Crack a problem you failed twice ;; Ultra plan only, for the stubborn one
+geminiresearch.dr | A cited market brief from an approved plan ;; 5 to 20 minutes, you steer in the plan step
+geminiresearch.drmax | An overnight report on a whole industry ;; up to 60 minutes, widest context gathering
+undermind.quick | Check what exists on a topic, fast ;; a few top results in seconds
+undermind.deep | Find every paper on a thesis topic ;; 2 to 10 minutes, one well-aimed search usually covers it
 ```
 
 Haiku 4.5 sits at class 1 on the Anthropic ladder so the ring lands on the right rung.

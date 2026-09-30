@@ -23,14 +23,6 @@ Sources for the model facts, migration and cost-versus-intelligence sections bel
 - https://platform.claude.com/docs/en/about-claude/models/choosing-a-model
 - https://platform.claude.com/docs/en/about-claude/models/migration-guide, plus the four pages it links to that cover current models: https://platform.claude.com/docs/en/models/fable-5-1/migration-guide, https://platform.claude.com/docs/en/models/opus-5-5/migration-guide (fetched 24 September 2026), https://platform.claude.com/docs/en/models/sonnet-5/migration-guide, https://platform.claude.com/docs/en/models/haiku-4-5/migration-guide
 
-Sources for the Claude app section below (support.claude.com, read 30 September 2026):
-- https://support.claude.com/en/articles/12138966-release-notes
-- https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features
-- https://support.claude.com/en/articles/8606394-how-large-is-the-context-window-on-paid-claude-plans
-- https://support.claude.com/en/articles/11817273-use-claude-s-chat-search-and-memory-to-build-on-previous-context
-- https://support.claude.com/en/articles/9519177-how-can-i-create-and-manage-projects
-- https://support.claude.com/en/articles/7996853-introduction-to-prompt-design
-
 - https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide (30 September 2026)
 
 Historical, not re-read since 16 September 2026 (listed so the Opus 4.8 to Opus 5 and Sonnet 4.6 to Sonnet 5 migration notes below are traceable): https://platform.claude.com/docs/en/models/opus-5/migration-guide, https://platform.claude.com/docs/en/models/opus-5/whats-new-opus-5, https://platform.claude.com/docs/en/models/sonnet-5/migration-guide.
@@ -55,8 +47,8 @@ Straight from the model comparison table on `models/overview` (16 Sep 2026) unle
 |---|---|---|---|---|---|
 | Claude Fable 5.1 | 1M tokens | 128K tokens | $10 | $50 | `low`, `medium`, `high` (default), `xhigh`, `max`. Cache reads at 2.5% of input price, a quarter of Fable 5's. (`models/fable-5-1/overview`) |
 | Claude Opus 5.5 | 1M tokens | 128K tokens | $4 | $20 | `low`, `medium` (default, one level below Opus 5's `high`), `high`, `xhigh`, `max`. Thinking is always on and cannot be disabled. Cache reads $0.20/MTok, 5% of input price (the standard is 10%, Fable 5.1 2.5%). Knowledge cutoff June 2026. Fast mode (research preview, Claude API only) gives "up to 2.5x higher output speed at premium pricing". (`models/opus-5-5/overview`, `choosing-a-model`, 25 Sep 2026) |
-| Claude Sonnet 5.5 | 1M tokens | 128K tokens | $2 | $10 | `low`, `medium`, `high` (default), `xhigh`, `max`, recalibrated against Sonnet 5. Thinking is adaptive and on by default; `thinking: disabled` returns 400. Reliable knowledge cutoff June 2026. Same tokenizer and prices as Sonnet 5. (`models/sonnet-5-5/overview`, `effort`, 30 Sep 2026) |
-| Claude Haiku 4.5 | 200K tokens | 64K tokens | $1 | $5 | Not supported. Haiku 4.5 has no `effort` parameter at all; sending one errors (`models/overview`, `models/haiku-4-5/overview`) |
+| Claude Sonnet 5.5 | 1M tokens | 128K tokens | $2 | $10 | `low`, `medium`, `high` (default), `xhigh`, `max`, recalibrated against Sonnet 5. Thinking is adaptive and on by default; `thinking: disabled` returns 400; since the 28 Sep 2026 release note, send `thinking: {"type": "between_tools"}` to turn off up-front thinking (high effort or below). Reliable knowledge cutoff June 2026. Same tokenizer and prices as Sonnet 5. (`models/sonnet-5-5/overview`, `effort`, 30 Sep 2026) |
+| Claude Haiku 4.5 | 200K tokens | 64K tokens | $1 | $5 | Not supported. Haiku 4.5 has no `effort` parameter at all; sending one errors (`models/overview`, `models/haiku-4-5/overview`). Retirement not sooner than 15 Oct 2026; Sonnet 4.5 is deprecated 30 Sep and retires 30 Nov 2026 (replacement `claude-sonnet-5-5`). `prompting-claude-haiku-4-5` is a 404, so Haiku prompt advice comes from the general best-practices page. Recheck 30 Sep 2026: `claude-mythos-5-1` is now listed Active and covered on the best-practices page alongside Fable 5.1 |
 
 Batch API requests are 50% off list price on every model above; not broken out per-model beyond that (`models/overview`).
 
@@ -186,18 +178,6 @@ Anthropic publishes no Haiku 4.5 prompting page (checked 16 September 2026, see 
 - **Covered by the general techniques.** The best-practices page lists Claude Haiku 4.5 among the current models its techniques apply to. Nothing in it names a Haiku-only quirk to prompt around.
 - **Has context awareness.** Haiku 4.5 tracks its remaining context window. For an agentic prompt in a harness that compacts context or saves state to files, say so, so it doesn't wrap up early as the limit approaches: keep working, save progress and state before the context refreshes, don't stop a task early for budget reasons.
 - **Has no effort setting.** Haiku 4.5 is absent from the effort parameter's supported-model list, so never write an effort level into a Haiku prompt or suggest one.
-
-## Claude app-specific notes
-
-The claude.ai product (web, desktop, mobile), not the API. Anthropic publishes no prompting guide for the app: the only prompt-design page read is a two-paragraph help article that says to treat Claude as a newly hired contractor with no context about you or your task, and points to the API docs. So prompt wording follows "General principles" above, and this section adds only what the app changes (support.claude.com, 30 Sep 2026). Confidence is 62%: current first-party product facts, no dedicated guide, no independent check.
-
-**Where instructions live.** Three places, and a prompt pasted into a chat is the smallest of them. Instructions for Claude are account-wide and apply to every conversation. Project instructions apply only to chats in that project, and are for context, workflow rules, requirements and a role. Skills adjust tone and format or add task capabilities. A rewrite should keep a one-off task in the prompt and leave standing preferences to these settings.
-
-**Context and memory.** Chat context on paid plans is 1M tokens for Fable 5.1, Opus 5.5, Opus 5, Sonnet 5.5 and Sonnet 5, 500K for the earlier 4.x and Fable 5 models, 200K for others. Project instructions should be concise: general context, key guidelines, Claude's role. Connectors and tools cost tokens, so name the ones a task needs. Memory saves topics across chats (on by default for Free, Pro and Max, off for Team and Enterprise), each project has its own memory, and chat search stays inside a project. So do not assume the model remembers an earlier chat: restate what the task depends on.
-
-**Artifacts.** Designs, slides and documents are available on every plan including Free, from any conversation, so a prompt can ask for one directly and name the format.
-
-**Not read.** Plan usage limits, research mode, artifacts help and the effort and thinking settings page. Do not state limits or mode behaviour from this section.
 
 ## What NOT to over-apply
 

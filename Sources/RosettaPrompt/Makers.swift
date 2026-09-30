@@ -56,7 +56,7 @@ enum Maker: String, CaseIterable, Identifiable {
         switch self {
         case .anthropic: return ["platform.claude.com", "support.claude.com", "docs.claude.com", "claude.ai", "anthropic.com", "www.anthropic.com"]
         case .openai: return ["developers.openai.com", "help.openai.com", "platform.openai.com", "openai.com", "chatgpt.com"]
-        case .google: return ["ai.google.dev", "gemini.google.com", "deepmind.google", "blog.google"]
+        case .google: return ["ai.google.dev", "gemini.google.com", "deepmind.google", "blog.google", "gemini.google", "support.google.com"]
         case .undermind: return ["undermind.ai", "www.undermind.ai"]
         }
     }
@@ -89,12 +89,14 @@ extension Target {
         case "opus": return "Opus 5.5"
         case "sonnet": return "Sonnet 5.5"
         case "haiku": return "Haiku 4.5"
-        case "claudeapp": return "Claude app"
         case "luna": return "GPT-6 Luna"
         case "sol": return "GPT-6.1 Sol"
         case "astra": return "GPT-6 Astra"
-        case "chatgpt": return "ChatGPT app"
-        case "gemini": return "Gemini 3.8 Flash"
+        case "geminilite": return "3.5 Flash-Lite"
+        case "gemini": return "3.8 Flash"
+        case "geminipro": return "3.1 Pro"
+        case "geminithink": return "+ Extended thinking"
+        case "geminiresearch": return "+ Deep Research"
         case "undermind": return "Deep search"
         default: return label
         }
