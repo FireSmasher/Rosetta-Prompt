@@ -2,7 +2,7 @@
 """Rosetta Prompt eval checker.
 
 Checks one rewritten prompt against the success criteria in reference/rewrite-evals.md.
-Code checks run first; the Sonnet 5 judge runs only if they pass. Verdicts use the
+Code checks run first; the Sonnet 5.5 judge runs only if they pass. Verdicts use the
 harness L1 verdict format. Stdlib only, so /usr/bin/python3 can run it from the app.
 
   check_rewrite.py check --target opus --original O.txt --rewrite R.txt [--context C.txt] [--no-judge]
@@ -33,14 +33,16 @@ CALIB_DIR = os.path.join(EVALS_DIR, "calibration")
 REPORTS_DIR = os.path.join(EVALS_DIR, "reports")
 
 TARGET_LABELS = {
-    "fable": "Claude Fable 5.1", "opus": "Claude Opus 5.5", "sonnet": "Claude Sonnet 5",
-    "haiku": "Claude Haiku 4.5", "sol": "GPT-6 Sol",
+    "fable": "Claude Fable 5.1", "opus": "Claude Opus 5.5", "sonnet": "Claude Sonnet 5.5",
+    "haiku": "Claude Haiku 4.5", "sol": "GPT-6.1 Sol",
     "luna": "GPT-6 Luna", "astra": "GPT-6 Astra",
+    "claudeapp": "Claude app (claude.ai)", "chatgpt": "ChatGPT app (chatgpt.com)",
+    "gemini": "Google Gemini 3.8 Flash", "undermind": "Undermind.ai deep search",
 }
 
 DEFAULT_LIMITS = {
     "short_words": "60", "overbuilt_words": "350", "dropped_min_words": "150",
-    "dropped_ratio": "0.2", "max_attempts": "3", "judge_model": "sonnet",
+    "dropped_ratio": "0.2", "max_attempts": "3", "judge_model": "claude-sonnet-5-5",
     "judge_effort": "low", "armed_min_cases": "20", "armed_min_rate": "0.9", "armed_runs": "3",
 }
 
@@ -99,6 +101,30 @@ def limit(key):
     return rows.get(key) or DEFAULT_LIMITS[key]
 
 
+def style_setting(key, default="off"):
+    """House-style switches live in model-selection.md (`@table style`); model-selection.local.md
+    overrides them on one machine. The public default for the dash rule is off."""
+    value = default
+    for name in ("model-selection.md", "model-selection.local.md"):
+        try:
+            with open(os.path.join(SKILL_DIR, "reference", name), encoding="utf-8") as fh:
+                lines = fh.read().split("\n")
+        except OSError:
+            continue
+        table = None
+        for raw in lines:
+            line = raw.strip()
+            if line.startswith("@table "):
+                table = line[7:].strip()
+            elif table == "style" and "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                if k.strip() == key:
+                    value = v.strip().lower()
+            elif line.startswith("```"):
+                table = None
+    return value
+
+
 def judge_questions():
     return TABLES.get("judge") or DEFAULT_JUDGE
 
@@ -146,6 +172,13 @@ PLACEHOLDER = re.compile(r"\[[A-Z][A-Z0-9 _/\-]{2,}\]|\bTBD\b|\bTODO\b|<insert[^
 OPUS_VERIFY = re.compile(r"double[- ]check|re-?verify|verification step|verify your (answer|work|output)|"
                          r"subagent to (verify|double)", re.I)
 REVIEW_FILTER = re.compile(r"only report (high|critical)[- ]severity|\bbe conservative\b|don'?t nitpick", re.I)
+THINK_ALOUD = re.compile(r"think (step[- ]by[- ]step|aloud|out loud)|chain[- ]of[- ]thought|reason step[- ]by[- ]step|"
+                         r"explain your (reasoning|thinking) (first|before)", re.I)
+APP_SETTING = re.compile(r"\b(temperature|top[_-]?p|max[_ -]?tokens|stop sequences?|reasoning[_ ]effort|"
+                         r"--effort|effort (level|parameter|setting))\b", re.I)
+BOOLEAN_QUERY = re.compile(r"\b[\w\"'()-]+\s+(AND|OR|NOT)\s+[\w\"'()-]+\s+(AND|OR|NOT)\s+[\w\"'()-]+|\bNEAR/\d+\b")
+SEARCH_STRUCTURE = re.compile(r"^\s*you are (a|an|the)\b|</?(task|instructions|context|query|constraints)\b|"
+                              r"\b(low|medium|high|xhigh|max)[- ]effort\b", re.I | re.M)
 HAIKU_EFFORT = re.compile(r"--effort\b|\beffort\b[^.\n]{0,40}\b(low|medium|high|xhigh|max)\b|"
                           r"\b(low|medium|high|xhigh|max)\b[- ]effort\b", re.I)
 ANTIFORMAT = re.compile(r"(do not|don'?t|never|avoid)( use)? (any )?(markdown|bullet|lists|headers|headings|bold)", re.I)
@@ -161,7 +194,7 @@ def code_checks(target, original, rewrite, context):
         blocking.append(finding("output.empty", "", "Return the rewritten prompt."))
         return blocking, advisory
 
-    m = LONG_DASH_RE.search(rewrite)
+    m = LONG_DASH_RE.search(rewrite) if style_setting("no_long_dash") == "on" else None
     if m:
         blocking.append(finding("punct.long_dash", rewrite[max(0, m.start() - 30):m.end() + 30],
                                 "Replace with a comma, colon or full stop, or recast the sentence.",
@@ -203,7 +236,7 @@ def code_checks(target, original, rewrite, context):
     if target == "opus":
         m = OPUS_VERIFY.search(rewrite)
         if m:
-            blocking.append(finding("target.opus5_verify", m.group(0),
+            blocking.append(finding("target.opus_verify", m.group(0),
                                     "Opus 5.5 already verifies its work. Remove the verification instruction.",
                                     [m.start(), m.end()]))
     if target in ("opus", "sonnet"):
@@ -217,6 +250,29 @@ def code_checks(target, original, rewrite, context):
         if m:
             blocking.append(finding("target.haiku_effort", m.group(0),
                                     "Haiku 4.5 has no effort setting. Remove the effort line.",
+                                    [m.start(), m.end()]))
+    if target in ("luna", "sol", "astra", "gemini"):
+        m = THINK_ALOUD.search(rewrite)
+        if m and not THINK_ALOUD.search(source):
+            blocking.append(finding("target.think_aloud", m.group(0),
+                                    "This is a reasoning model and thinks before it answers. Remove the think-aloud instruction.",
+                                    [m.start(), m.end()]))
+    if target in ("claudeapp", "chatgpt"):
+        m = APP_SETTING.search(rewrite)
+        if m and not APP_SETTING.search(source):
+            blocking.append(finding("target.app_setting", m.group(0),
+                                    "The app has no such control in a chat box. Remove the API setting from the prompt.",
+                                    [m.start(), m.end()]))
+    if target == "undermind":
+        m = BOOLEAN_QUERY.search(rewrite)
+        if m and not BOOLEAN_QUERY.search(source):
+            blocking.append(finding("target.undermind_boolean", m.group(0),
+                                    "Undermind takes a plain-language research request, not a Boolean query string.",
+                                    [m.start(), m.end()]))
+        m = SEARCH_STRUCTURE.search(rewrite)
+        if m and not SEARCH_STRUCTURE.search(source):
+            blocking.append(finding("target.undermind_structure", m.group(0).strip(),
+                                    "A search request needs no role line, XML tags or effort level. Write it as a research request.",
                                     [m.start(), m.end()]))
     if target == "fable":
         m = ANTIFORMAT.search(rewrite)

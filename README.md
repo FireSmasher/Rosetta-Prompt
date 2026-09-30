@@ -3,7 +3,7 @@
 A small macOS app that rewrites a messy prompt into a clear one for a specific target model,
 using that model's own published prompting guidance, then checks the rewrite before showing it.
 
-Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5 and Haiku 4.5; GPT-6 Astra, Sol and Luna.
+Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol and Astra; and four products with no model ladder, so no model pick: the Claude app, the ChatGPT app, Google Gemini 3.8 Flash and Undermind.ai deep search.
 
 ## What it does
 
@@ -13,11 +13,14 @@ Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5 and Haiku 4.5; GPT-6 Astra, Sol an
    model until you choose.
 2. **Rewrites** the prompt with Claude Opus (Claude Code's `opus` alias, Opus 5.5 since 22 September 2026), fed the general and model-specific sections of
    the distilled guides in `skill/reference/`.
-3. **Checks** the rewrite: code checks (no em or en dashes, no placeholders, no preamble or code
-   fence, length sanity, target-specific rules), then an advisory Sonnet 5 judge. A failed code
+3. **Checks** the rewrite: code checks (no placeholders, no preamble or code
+   fence, length sanity, target-specific rules), then an advisory Sonnet 5.5 judge. A failed code
    check sends the draft back, up to three attempts.
-4. **Learns from misses.** "This rewrite was wrong" files the result as a calibration case on
-   your machine.
+4. **Learns from misses and hits.** "Wrong?" files the result as a rejected calibration case and
+   "Right" as an approved one, on your machine.
+5. **Groups targets by maker** (Anthropic, OpenAI, Google, Undermind). Each group links to the
+   maker's own site, and "Copy and open" sends a finished rewrite to claude.ai, chatgpt.com, Gemini
+   or Undermind.
 
 The same workflow is available inside Claude Code as the `rosetta-prompt` skill.
 
@@ -53,7 +56,7 @@ cp skill/reference/model-selection.local.example.md skill/reference/model-select
 ```
 
 Edit the copy. Any table in it replaces the default table of the same name. The ones worth
-making your own are `detail` (the example jobs shown per model and effort level), `stakes`
+making your own are `lab` (the example job shown per model and effort level, with the maker's quote beside it in the Effort lab), `stakes`
 (words that always get a top-tier model at high effort) and `heavy` / `light` (your domain's
 vocabulary for hard and mechanical work). Changes apply the next time the app launches.
 
@@ -72,7 +75,17 @@ Your data stays local:
 ```sh
 python3 skill/scripts/check_rewrite.py replay   # must pass every case after any change
 python3 skill/scripts/check_rewrite.py status   # is the judge armed?
+python3 skill/scripts/score_prompt.py test skill/evals/scorer/cases.json   # scorer regression set
+~/Applications/RosettaPrompt.app/Contents/MacOS/RosettaPrompt --selftest        # audit every target offline
+~/Applications/RosettaPrompt.app/Contents/MacOS/RosettaPrompt --selftest --live # plus one real rewrite each (spends credits)
 ```
+
+The self test checks, for every target, that its guide sections load, its request builds, every
+source link is on the maker's own domains, the model pick resolves, and the checker approves a clean
+rewrite and rejects a bad one.
+
+House style is a setting. The no em or en dash rule ships off; set `no_long_dash = on` in the
+`style` table of `skill/reference/model-selection.local.md` to turn it on (prompt rule and check).
 
 Criteria and thresholds live in `skill/reference/rewrite-evals.md`. The judge stays advisory
 until at least 20 approved and 20 rejected calibration cases score 90% or better

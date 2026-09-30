@@ -88,18 +88,19 @@ def assess(task, tables, context="", family="anthropic"):
         score += 1; signals.append("sequenced work")
     if text.count("?") >= 3:
         score += 1; signals.append(f"{text.count('?')} separate questions")
+    stakes_text = text
+    for phrase, _ in tables.get("not-stakes", []):
+        stakes_text = stakes_text.replace(phrase, " ")
+    hws = words(stakes_text)
     ws = words(text)
     heavy = 0
     for needle, label in tables["heavy"]:
-        if match(needle, text, ws):
+        if match(needle, stakes_text, hws):
             heavy += 2; signals.append(label)
     score += min(heavy, num("wordcap"))
     for needle, label in tables["light"]:
         if match(needle, text, ws):
             score -= 1; signals.append(label)
-    stakes_text = text
-    for phrase, _ in tables.get("not-stakes", []):
-        stakes_text = stakes_text.replace(phrase, " ")
     sws = words(stakes_text)
     stakes = sorted({label for needle, label in tables["stakes"] if match(needle, stakes_text, sws)})
     c2, c3, c4 = num("class2from"), num("class3from"), num("class4from")

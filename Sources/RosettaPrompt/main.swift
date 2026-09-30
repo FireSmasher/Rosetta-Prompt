@@ -37,6 +37,9 @@ struct Target: Identifiable, Hashable {
     let confidenceCriteria: [ConfidenceCriterion]
     /// Only the pages that fed this target's entry, not every page either reference guide cites.
     let sourceLinks: [SourceLink]
+    /// False for products with no model ladder to score against (apps, a search tool): no model or
+    /// effort pick is offered and the rewrite starts on the first press of Translate.
+    var scored: Bool = true
 }
 
 let targets: [Target] = [
@@ -66,8 +69,8 @@ let targets: [Target] = [
            generalHeader: "## General principles (all current Claude models)",
            specificHeader: "## Opus 5.5-specific notes",
            sourceDate: "24 Sep 2026",
-           confidencePercent: 95,
-           confidenceNote: "Primary Anthropic docs.",
+           confidencePercent: 90,
+           confidenceNote: "Primary Anthropic docs, re-read 30 Sep 2026 (five Opus 5.5 pages plus the best-practices page). Everything that changed from Opus 5 is confirmed on the Opus 5.5 page. The seven carried-over points (length, narration, over-checking, correction notes, subagents, scope, office work) are stated on the Opus 5 page only: the 5.5 pages neither restate nor contradict them, so they stay unconfirmed and the score stays at 90.",
            confidenceCriteria: [
                .init(label: "Official prompting page exists", met: true),
                .init(label: "Model overview page read", met: true),
@@ -82,13 +85,13 @@ let targets: [Target] = [
                .init(label: "models/opus-5-5/migration-guide", url: "https://platform.claude.com/docs/en/models/opus-5-5/migration-guide"),
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
            ]),
-    Target(id: "sonnet", label: "Claude Sonnet 5",
+    Target(id: "sonnet", label: "Claude Sonnet 5.5",
            fileName: "anthropic-prompting-guide.md",
            generalHeader: "## General principles (all current Claude models)",
-           specificHeader: "## Sonnet 5-specific notes",
-           sourceDate: "16 Sep 2026",
-           confidencePercent: 95,
-           confidenceNote: "Primary Anthropic docs.",
+           specificHeader: "## Sonnet 5.5-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 90,
+           confidenceNote: "Primary Anthropic docs. Points carried over from Sonnet 5 are unconfirmed, and no Sonnet 5.5 cost-per-task figure is published.",
            confidenceCriteria: [
                .init(label: "Official prompting page exists", met: true),
                .init(label: "Model overview page read", met: true),
@@ -97,10 +100,10 @@ let targets: [Target] = [
            ],
            sourceLinks: [
                .init(label: "prompt-engineering/claude-prompting-best-practices", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"),
-               .init(label: "prompt-engineering/prompting-claude-sonnet-5", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5"),
-               .init(label: "models/sonnet-5/overview", url: "https://platform.claude.com/docs/en/models/sonnet-5/overview"),
-               .init(label: "models/sonnet-5/whats-new-sonnet-5", url: "https://platform.claude.com/docs/en/models/sonnet-5/whats-new-sonnet-5"),
-               .init(label: "models/sonnet-5/migration-guide", url: "https://platform.claude.com/docs/en/models/sonnet-5/migration-guide"),
+               .init(label: "prompt-engineering/prompting-claude-sonnet-5-5", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5"),
+               .init(label: "models/sonnet-5-5/overview", url: "https://platform.claude.com/docs/en/models/sonnet-5-5/overview"),
+               .init(label: "models/sonnet-5-5/whats-new-sonnet-5-5", url: "https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5"),
+               .init(label: "models/sonnet-5-5/migration-guide", url: "https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide"),
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
            ]),
     // Appended after Sonnet rather than placed first, so targets[1] (Opus, the default) and
@@ -125,26 +128,8 @@ let targets: [Target] = [
                .init(label: "build-with-claude/effort", url: "https://platform.claude.com/docs/en/build-with-claude/effort"),
                .init(label: "models/overview", url: "https://platform.claude.com/docs/en/models/overview"),
            ]),
-    // GPT-6 Sol and Luna replaced the GPT-5.6 tiers on 24 Sep 2026. OpenAI publishes no GPT-6 Terra.
-    Target(id: "sol", label: "GPT-6 Sol",
-           fileName: "openai-prompting-guide.md",
-           generalHeader: "## General principles (current GPT models)",
-           specificHeader: "## GPT-6 Sol-specific notes",
-           sourceDate: "24 Sep 2026",
-           confidencePercent: 80,
-           confidenceNote: "Primary docs. OpenAI's one GPT-6 guide covers the whole family, and its behaviour notes were observed on Astra, not on this model.",
-           confidenceCriteria: [
-               .init(label: "Dedicated per-tier prompting page exists", met: false),
-               .init(label: "Model overview / pricing page read", met: true),
-               .init(label: "Tier-to-tier behavior split published", met: false),
-               .init(label: "Family prompting guide covered", met: true),
-           ],
-           sourceLinks: [
-               .init(label: "guides/latest-model", url: "https://developers.openai.com/api/docs/guides/latest-model"),
-               .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
-               .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
-               .init(label: "models/gpt-6-sol", url: "https://developers.openai.com/api/docs/models/gpt-6-sol"),
-           ]),
+    // GPT-6 Sol and Luna replaced the GPT-5.6 tiers on 24 Sep 2026; GPT-6.1 Sol replaced GPT-6 Sol on
+    // 29 Sep 2026 (the id stays `sol`). OpenAI publishes no GPT-6 Terra.
     Target(id: "luna", label: "GPT-6 Luna",
            fileName: "openai-prompting-guide.md",
            generalHeader: "## General principles (current GPT models)",
@@ -163,6 +148,25 @@ let targets: [Target] = [
                .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
                .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
                .init(label: "models/gpt-6-luna", url: "https://developers.openai.com/api/docs/models/gpt-6-luna"),
+           ]),
+    Target(id: "sol", label: "GPT-6.1 Sol",
+           fileName: "openai-prompting-guide.md",
+           generalHeader: "## General principles (current GPT models)",
+           specificHeader: "## GPT-6.1 Sol-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 80,
+           confidenceNote: "Primary docs. OpenAI's one GPT-6 guide covers the whole family, and its behaviour notes were observed on Astra, not on this model.",
+           confidenceCriteria: [
+               .init(label: "Dedicated per-tier prompting page exists", met: false),
+               .init(label: "Model overview / pricing page read", met: true),
+               .init(label: "Tier-to-tier behavior split published", met: false),
+               .init(label: "Family prompting guide covered", met: true),
+           ],
+           sourceLinks: [
+               .init(label: "guides/latest-model", url: "https://developers.openai.com/api/docs/guides/latest-model"),
+               .init(label: "guides/reasoning", url: "https://developers.openai.com/api/docs/guides/reasoning"),
+               .init(label: "guides/prompt-engineering", url: "https://developers.openai.com/api/docs/guides/prompt-engineering"),
+               .init(label: "models/gpt-6.1-sol", url: "https://developers.openai.com/api/docs/models/gpt-6.1-sol"),
            ]),
     Target(id: "astra", label: "GPT-6 Astra",
            fileName: "openai-prompting-guide.md",
@@ -183,6 +187,91 @@ let targets: [Target] = [
                .init(label: "guides/latest-model", url: "https://developers.openai.com/api/docs/guides/latest-model"),
                .init(label: "models/gpt-6-astra", url: "https://developers.openai.com/api/docs/models/gpt-6-astra"),
            ]),
+    // Products, not models, added 30 Sep 2026. Appended so every earlier index stays put. Unscored:
+    // the advisor's ladders are per model family, and none of these has one.
+    Target(id: "claudeapp", label: "Claude app (claude.ai)",
+           fileName: "anthropic-prompting-guide.md",
+           generalHeader: "## General principles (all current Claude models)",
+           specificHeader: "## Claude app-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 62,
+           confidenceNote: "Primary Anthropic help pages. Anthropic publishes no claude.ai prompting guide, only a two-paragraph help article that points to the API docs, so prompt advice is borrowed from the API guide.",
+           confidenceCriteria: [
+               .init(label: "Official app prompting page exists", met: false),
+               .init(label: "Product help pages read", met: true),
+               .init(label: "Release notes read", met: true),
+               .init(label: "Independent field verification", met: false),
+           ],
+           sourceLinks: [
+               .init(label: "articles/12138966-release-notes", url: "https://support.claude.com/en/articles/12138966-release-notes"),
+               .init(label: "articles/10185728-personalization", url: "https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features"),
+               .init(label: "articles/8606394-context-window", url: "https://support.claude.com/en/articles/8606394-how-large-is-the-context-window-on-paid-claude-plans"),
+               .init(label: "articles/11817273-chat-search-and-memory", url: "https://support.claude.com/en/articles/11817273-use-claude-s-chat-search-and-memory-to-build-on-previous-context"),
+               .init(label: "articles/9519177-projects", url: "https://support.claude.com/en/articles/9519177-how-can-i-create-and-manage-projects"),
+               .init(label: "articles/7996853-prompt-design", url: "https://support.claude.com/en/articles/7996853-introduction-to-prompt-design"),
+           ],
+           scored: false),
+    Target(id: "chatgpt", label: "ChatGPT app (chatgpt.com)",
+           fileName: "openai-prompting-guide.md",
+           generalHeader: "## General principles (current GPT models)",
+           specificHeader: "## ChatGPT app-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 60,
+           confidenceNote: "Primary OpenAI help pages. OpenAI publishes no ChatGPT prompting guide that was found, so prompt advice is borrowed from the API guide.",
+           confidenceCriteria: [
+               .init(label: "Official ChatGPT prompting page exists", met: false),
+               .init(label: "Product overview / help page read", met: true),
+               .init(label: "Release notes read", met: true),
+               .init(label: "Independent field verification", met: false),
+           ],
+           sourceLinks: [
+               .init(label: "articles/6825453-chatgpt-release-notes", url: "https://help.openai.com/en/articles/6825453-chatgpt-release-notes"),
+               .init(label: "articles/8096356-custom-instructions", url: "https://help.openai.com/en/articles/8096356-chatgpt-custom-instructions"),
+               .init(label: "chatgpt/overview", url: "https://openai.com/chatgpt/overview/"),
+               .init(label: "articles/6654000-prompt-engineering", url: "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api"),
+           ],
+           scored: false),
+    Target(id: "gemini", label: "Google Gemini 3.8 Flash",
+           fileName: "google-prompting-guide.md",
+           generalHeader: "## General principles (current Gemini models)",
+           specificHeader: "## Gemini-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 78,
+           confidenceNote: "Primary Google docs, all dated within 6 days. The Gemini app's own prompt guide was not found and no independent source was read.",
+           confidenceCriteria: [
+               .init(label: "Dedicated prompting page exists", met: true),
+               .init(label: "Model overview / pricing page read", met: true),
+               .init(label: "Migration guidance read", met: true),
+               .init(label: "Independent field verification", met: false),
+           ],
+           sourceLinks: [
+               .init(label: "gemini-api/docs/prompting-strategies", url: "https://ai.google.dev/gemini-api/docs/prompting-strategies"),
+               .init(label: "gemini-api/docs/models", url: "https://ai.google.dev/gemini-api/docs/models"),
+               .init(label: "models/gemini-3.8-flash", url: "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash"),
+               .init(label: "gemini-api/docs/latest-model", url: "https://ai.google.dev/gemini-api/docs/latest-model"),
+               .init(label: "gemini-api/docs/thinking", url: "https://ai.google.dev/gemini-api/docs/thinking"),
+               .init(label: "gemini-api/docs/pricing", url: "https://ai.google.dev/gemini-api/docs/pricing"),
+           ],
+           scored: false),
+    Target(id: "undermind", label: "Undermind.ai deep search",
+           fileName: "undermind-search-guide.md",
+           generalHeader: "## General principles (writing a search request)",
+           specificHeader: "## Undermind-specific notes",
+           sourceDate: "30 Sep 2026",
+           confidencePercent: 55,
+           confidenceNote: "A search tool, not a chat model. Vendor pages and Undermind's own tool orientation only: no published query-writing guide, no changelog, no independent source.",
+           confidenceCriteria: [
+               .init(label: "Official query-writing guidance exists", met: false),
+               .init(label: "Product / pricing page read", met: true),
+               .init(label: "Changelog read", met: false),
+               .init(label: "Independent field verification", met: false),
+           ],
+           sourceLinks: [
+               .init(label: "undermind.ai", url: "https://www.undermind.ai/"),
+               .init(label: "undermind.ai/pricing", url: "https://www.undermind.ai/pricing"),
+               .init(label: "undermind.ai/mcp", url: "https://www.undermind.ai/mcp"),
+           ],
+           scored: false),
 ]
 
 let skillDir = ("~/.claude/skills/rosetta-prompt" as NSString).expandingTildeInPath
@@ -371,7 +460,7 @@ func runProcess(exe: String, arguments: [String], extraEnv: [String: String] = [
 // MARK: - Eval checks
 //
 // Every rewrite goes through scripts/check_rewrite.py in the skill folder before it is shown:
-// code checks first, then a Sonnet 5 judge. The criteria live in reference/rewrite-evals.md, so
+// code checks first, then a Sonnet 5.5 judge. The criteria live in reference/rewrite-evals.md, so
 // they can change without a rebuild. The judge is advisory until its calibration set arms it
 // (the harness rule in reference/rewrite-evals.md), which the script decides, not the app.
 
@@ -429,7 +518,7 @@ enum EvalRunner {
 
     /// Nil result means the checks could not run. That never blocks a rewrite; the reason is shown.
     static func check(target: Target, original: String, rewrite: String, context: String,
-                      attempt: Int) async -> (result: CheckResult?, problem: String) {
+                      attempt: Int, noJudge: Bool = false) async -> (result: CheckResult?, problem: String) {
         guard FileManager.default.fileExists(atPath: checkerPath) else {
             return (nil, "checker not found at \(checkerPath)")
         }
@@ -438,7 +527,7 @@ enum EvalRunner {
         do {
             let args = [checkerPath, "check"]
                 + (try writeInputs(to: dir, target: target, original: original, rewrite: rewrite, context: context))
-                + ["--attempt", String(attempt)]
+                + ["--attempt", String(attempt)] + (noJudge ? ["--no-judge"] : [])
             var extraEnv: [String: String] = [:]
             if let claude = ClaudeRunner.findExecutable() { extraEnv["ROSETTA_CLAUDE_BIN"] = claude }
             let outcome = try await runProcess(exe: "/usr/bin/python3", arguments: args, extraEnv: extraEnv)
@@ -458,23 +547,25 @@ enum EvalRunner {
     /// Files a rewrite the user judged wrong as a rejected judge calibration case (harness L5). Not a
     /// replay case: replay runs code checks only, and a rewrite that passed them would fail the
     /// replay gate forever. Returns the line to show.
-    static func saveRejectedCase(target: Target, original: String, rewrite: String, context: String,
-                                 why: String) async -> String {
+    static func saveCase(target: Target, original: String, rewrite: String, context: String,
+                         why: String, approved: Bool) async -> String {
         let dir = tempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
         do {
             let args = [checkerPath, "save-case"]
                 + (try writeInputs(to: dir, target: target, original: original, rewrite: rewrite, context: context))
-                + ["--expected", "Rejected", "--why", why, "--dest", "calibration"]
+                + ["--expected", approved ? "Approved" : "Rejected", "--why", why, "--dest", "calibration"]
             let outcome = try await runProcess(exe: "/usr/bin/python3", arguments: args)
             guard outcome.status == 0 else {
                 let why = outcome.err.trimmingCharacters(in: .whitespacesAndNewlines)
                 return "Not saved: \(why.isEmpty ? "save-case exited with status \(outcome.status)" : why)"
             }
-            let rejectedDir = (skillDir as NSString).appendingPathComponent("evals/calibration/rejected")
-            let count = ((try? FileManager.default.contentsOfDirectory(atPath: rejectedDir)) ?? [])
-                .filter { $0.hasSuffix(".json") }.count
-            return "Saved. \(count) rejected calibration case\(count == 1 ? "" : "s") on file."
+            func count(_ side: String) -> Int {
+                let dir = (skillDir as NSString).appendingPathComponent("evals/calibration/\(side)")
+                return ((try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? [])
+                    .filter { $0.hasSuffix(".json") }.count
+            }
+            return "Saved. \(count("approved")) approved and \(count("rejected")) rejected calibration cases on file (20 of each arms the judge)."
         } catch {
             return "Not saved: \(error.localizedDescription)"
         }
@@ -494,6 +585,54 @@ enum EvalRunner {
     }
 }
 
+@MainActor
+/// The rewrite, check and bounce loop, shared by the window and by `--selftest` so the self test
+/// exercises the code the app really runs.
+struct RewriteOutcome {
+    let output: String
+    let check: (result: CheckResult?, problem: String)
+    let attempts: Int
+}
+
+@MainActor
+enum RewritePipeline {
+    /// The effort the checker's judge is told the app itself supplied, so it is not read as invented.
+    static func checkContext(_ context: String, target: Target, suggested: String?) -> String {
+        suggested.map {
+            context + "\n\nEffort level set by Rosetta Prompt's difficulty score for \(target.label): \($0). The rewrite may state it."
+        } ?? context
+    }
+
+    /// Harness L4 bounce loop: rewrite, check, and on a failed check send the draft back with the
+    /// reasons. The script sets the attempt cap; the last draft is always returned.
+    static func run(target: Target, messy: String, context: String, suggested: String?, effort: String,
+                    status: (String) -> Void = { _ in }) async throws -> RewriteOutcome {
+        let forChecker = checkContext(context, target: target, suggested: suggested)
+        var attempt = 1
+        var retry: (draft: String, feedback: String)?
+        var output = ""
+        var check: (result: CheckResult?, problem: String) = (nil, "")
+        while true {
+            status(attempt == 1 ? "Rewriting..." : "Retrying (\(attempt))...")
+            let request = try buildRequest(target: target, messyPrompt: messy, extraContext: context,
+                                           suggestedEffort: suggested, retry: retry)
+            output = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
+            if output.isEmpty {
+                throw NSError(domain: "RosettaPrompt", code: 3, userInfo: [
+                    NSLocalizedDescriptionKey: "The rewrite came back empty for \(target.label)."])
+            }
+            status("Checking...")
+            check = await EvalRunner.check(target: target, original: messy, rewrite: output,
+                                           context: forChecker, attempt: attempt)
+            guard let found = check.result, found.retry, attempt < found.maxAttempts else { break }
+            retry = (draft: output, feedback: found.feedback)
+            attempt += 1
+        }
+        return RewriteOutcome(output: output, check: check, attempts: attempt)
+    }
+}
+
+@MainActor
 func buildRequest(target: Target, messyPrompt: String, extraContext: String, suggestedEffort: String?,
                   retry: (draft: String, feedback: String)? = nil) throws -> String {
     let general = try loadSection(fileName: target.fileName, header: target.generalHeader)
@@ -545,6 +684,18 @@ func buildRequest(target: Target, messyPrompt: String, extraContext: String, sug
         retryBlock = ""
     }
 
+    // One writer's house style, so it ships off. `no_long_dash = on` in the `style` table of
+    // model-selection.md (or the local file beside it) turns on the instruction below and the
+    // matching `punct.long_dash` check in check_rewrite.py.
+    let noLongDash = Rubric.value("style", "no_long_dash", fallback: "off").lowercased() == "on"
+    let houseStyleBlock = noLongDash ? """
+
+    <house_style>
+    Never use an em dash or an en dash anywhere in your output. Not in the prose, not inside examples, not in headings. Use a comma, a colon, a full stop, or recast the sentence. This is a hard rule with no exceptions, and it overrides any habit or house style implied by the guidance above. A hyphen inside a genuine compound word is fine.
+    </house_style>
+    """ : ""
+    let dashFailure = noLongDash ? "any em or en dash, " : ""
+
     return """
     You are rewriting a disorganized user prompt into a clear, well-structured prompt for a specific target model, using the guidance below.
 
@@ -561,12 +712,10 @@ func buildRequest(target: Target, messyPrompt: String, extraContext: String, sug
     \(messyPrompt)
     </messy_prompt>
 
-    <house_style>
-    Never use an em dash or an en dash anywhere in your output. Not in the prose, not inside examples, not in headings. Use a comma, a colon, a full stop, or recast the sentence. This is a hard rule with no exceptions, and it overrides any habit or house style implied by the guidance above. A hyphen inside a genuine compound word is fine.
-    </house_style>
+    \(houseStyleBlock)
 
     <success_criteria>
-    The rewrite is checked before anyone sees it. It passes when it asks for the same task, deliverable and audience as the messy prompt; keeps every stated constraint; adds no names, numbers, files or facts that are not in the messy prompt or established context; makes clear what a finished answer looks like; and uses no more structure than the task needs. Only where the task carries that risk, it also lets the model say it lacks information and ground its claims in the given material, defines a repeatable output format precisely, and keeps secrets the task does not need out of the prompt. It fails on any em or en dash, a placeholder slot such as [NAME] or TBD, a lead-in line or closing note, or a code fence around the whole output.
+    The rewrite is checked before anyone sees it. It passes when it asks for the same task, deliverable and audience as the messy prompt; keeps every stated constraint; adds no names, numbers, files or facts that are not in the messy prompt or established context; makes clear what a finished answer looks like; and uses no more structure than the task needs. Only where the task carries that risk, it also lets the model say it lacks information and ground its claims in the given material, defines a repeatable output format precisely, and keeps secrets the task does not need out of the prompt. It fails on \(dashFailure)a placeholder slot such as [NAME] or TBD, a lead-in line or closing note, or a code fence around the whole output.
     </success_criteria>
     \(retryBlock)
 
@@ -599,7 +748,16 @@ enum Rubric {
         for name in [fileName, localFileName] {
             let path = (referenceDir as NSString).appendingPathComponent(name)
             guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { continue }
-            tables.merge(parse(content)) { _, local in local }
+            // `lab` is merged row by row, so a local file can give a few levels its own jobs and
+            // keep the shipped neutral job for the rest. Every other table is replaced whole.
+            for (name, rows) in parse(content) {
+                if name == "lab", let shipped = tables[name] {
+                    let own = Set(rows.map(\.0))
+                    tables[name] = shipped.filter { !own.contains($0.0) } + rows
+                } else {
+                    tables[name] = rows
+                }
+            }
         }
     }
 
@@ -819,7 +977,9 @@ enum Advisor {
             ("traceback", "debugging"), ("stack trace", "debugging"), ("keeps dying", "debugging"),
             ("keeps failing", "debugging"), ("keeps crashing", "debugging"), ("not working", "debugging"),
             ("doesn't work", "debugging"), ("stops working", "debugging"),
-            ("wrong", "debugging"), ("slow", "performance work"), ("faster", "performance work"),
+            ("wrong answer", "debugging"), ("wrong result", "debugging"), ("wrong output", "debugging"),
+            ("wrong total", "debugging"), ("wrong number", "debugging"), ("went wrong", "debugging"), ("goes wrong", "debugging"),
+            ("slow", "performance work"), ("faster", "performance work"),
             ("review", "a review"), ("feedback", "a review"), ("best way", "a judgement call"),
             ("should i", "a judgement call"), ("advice", "a judgement call"), ("plan", "planning"),
             ("planning", "planning"), ("explain how", "explanation"), ("explain why", "explanation"),
@@ -866,7 +1026,8 @@ enum Advisor {
     /// blanked out before the stakes list is matched.
     private static var notStakes: [String] {
         Rubric.keys("not-stakes", fallback: ["schema contract", "data contract", "api contract",
-                                             "interface contract", "code contract", "contract test"])
+                                             "interface contract", "code contract", "contract test",
+                                             "contraction", "provenance"])
     }
 
     private static var generativeSignals: [String] {
@@ -878,7 +1039,7 @@ enum Advisor {
     /// Scores the messy prompt together with any extra context, since the context is part of what
     /// the finished prompt will ask the model to work through.
     static func assess(task: String, context: String, selected: Target) -> Advice? {
-        guard !task.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        guard selected.scored, !task.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         let raw = (task + "\n\n" + context).trimmingCharacters(in: .whitespacesAndNewlines)
         let text = raw.lowercased()
 
@@ -929,10 +1090,18 @@ enum Advisor {
 
         let tokens = words(text)
 
+        // Phrases that hold a signal word without the signal ("contractions", "provenance") are
+        // blanked before the heavy and stakes lists are matched.
+        var stakesText = text
+        for phrase in notStakes {
+            stakesText = stakesText.replacingOccurrences(of: phrase, with: " ")
+        }
+        let cleanTokens = words(stakesText)
+
         // Heavy phrases stack fast on a rambling brief, so the word list is capped. Reaching the
         // top class has to be earned by length, code or structure as well, not by vocabulary alone.
         var wordScore = 0
-        for signal in heavySignals where matches(signal.needle, text: text, words: tokens) {
+        for signal in heavySignals where matches(signal.needle, text: stakesText, words: cleanTokens) {
             wordScore += 2
             note(signal.label)
         }
@@ -943,10 +1112,6 @@ enum Advisor {
             note(signal.label)
         }
 
-        var stakesText = text
-        for phrase in notStakes {
-            stakesText = stakesText.replacingOccurrences(of: phrase, with: " ")
-        }
         let stakesTokens = words(stakesText)
         var stakeLabels: [String] = []
         for signal in stakesSignals where matches(signal.needle, text: stakesText, words: stakesTokens) {
@@ -1057,6 +1222,18 @@ final class TranslatorState: ObservableObject {
     @Published var reportingWrong = false
     @Published var wrongReason = ""
     @Published var caseStatus = ""
+    /// The source and checks fold-out. On the state object, not @State, because the macOS 27
+    /// Command Line Tools ship without the @State macro plugin.
+    @Published var detailsOpen = false
+    @Published var contextOpen = false
+    /// The Effort lab sheet. All of it lives here for the same reason as the fold-outs above.
+    @Published var labOpen = false
+    @Published var labTargetID = "opus"
+    @Published var labIndex: Double = 0
+    @Published var labMode = 0          // 0 Day, 1 Cost, 2 Race
+    @Published var labRaceShown = false
+    /// Briefly true after the /grab-context chip is pressed, so the chip can say it copied.
+    @Published var grabCopied = false
     /// Exactly what the last result was checked with, so a filed case matches what the judge saw
     /// even if the text boxes have been edited since.
     private var lastRun: (target: Target, original: String, rewrite: String, context: String)?
@@ -1074,6 +1251,34 @@ final class TranslatorState: ObservableObject {
         guard !mutating else { return }
         advice = nil
         awaitingChoice = false
+    }
+
+    /// Opens the Effort lab on the selected target, at the level this task was assessed for.
+    func openLab() {
+        labTargetID = selectedTarget.id
+        let levels = Lab.levels(for: selectedTarget.id)
+        if let effort = advice?.effort, let at = levels.firstIndex(of: effort) { labIndex = Double(at) } else { labIndex = 0 }
+        labOpen = true
+    }
+
+    /// Fills the Race bars a moment after the view appears, so they visibly grow.
+    func kickRace() {
+        labRaceShown = false
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            labRaceShown = true
+        }
+    }
+
+    /// Copies the slash command that distils a conversation into a block to paste in the box below.
+    func copyGrabContext() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString("/grab-context", forType: .string)
+        grabCopied = true
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            grabCopied = false
+        }
     }
 
     /// Estimated tokens sent to the rewriting model on the next press of Translate.
@@ -1095,12 +1300,14 @@ final class TranslatorState: ObservableObject {
         result = ""
 
         mutating = true
-        Ladder.turn += 1
         advice = Advisor.assess(task: messyPrompt, context: extraContext, selected: selectedTarget)
         mutating = false
         // Only a real model mismatch waits for a choice. Otherwise the effort pick is shown as
         // information and the rewrite starts on this same press.
-        guard let advice else { return }
+        guard let advice else {
+            if !selectedTarget.scored { rewrite(for: selectedTarget) }
+            return
+        }
         if advice.verdict.needsDecision {
             awaitingChoice = true
         } else {
@@ -1142,43 +1349,24 @@ final class TranslatorState: ObservableObject {
         lastRun = nil
         let messy = messyPrompt
         let context = extraContext
-        let effort = Advisor.engineEffort(for: advice)
+        let effort = target.scored ? Advisor.engineEffort(for: advice) : "medium"
         // Haiku 4.5 has no effort parameter, so the rewrite must never mention one.
         let suggested = target.id == "haiku" ? nil : advice?.effort
         // The Fable, Opus and Sonnet guides tell the rewriter to state this level, and the request
         // passes it on. The judge only sees the original and the context, so without this line it
         // reads the app's own number as invented and bounces a draft that passed every code check.
-        let checkContext = suggested.map {
-            context + "\n\nEffort level set by Rosetta Prompt's difficulty score for \(target.label): \($0). The rewrite may state it."
-        } ?? context
+        let checkContext = RewritePipeline.checkContext(context, target: target, suggested: suggested)
         Task {
             do {
-                // Harness L4 bounce loop: rewrite, check, and on a failed check send the draft back
-                // with the reasons. The script sets the attempt cap; the last draft is always shown.
-                var attempt = 1
-                var retry: (draft: String, feedback: String)?
-                var output = ""
-                var check: (result: CheckResult?, problem: String) = (nil, "")
-                while true {
-                    self.status = attempt == 1 ? "Rewriting..." : "Retrying (\(attempt))..."
-                    let request = try buildRequest(target: target,
-                                                   messyPrompt: messy,
-                                                   extraContext: context,
-                                                   suggestedEffort: suggested,
-                                                   retry: retry)
-                    output = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
-                    self.status = "Checking..."
-                    check = await EvalRunner.check(target: target, original: messy, rewrite: output,
-                                                   context: checkContext, attempt: attempt)
-                    guard let found = check.result, found.retry, attempt < found.maxAttempts else { break }
-                    retry = (draft: output, feedback: found.feedback)
-                    attempt += 1
-                }
-                self.result = output
-                self.lastRun = (target: target, original: messy, rewrite: output, context: checkContext)
-                self.checkSummary = EvalRunner.summary(check.result, problem: check.problem, attempts: attempt)
+                let outcome = try await RewritePipeline.run(target: target, messy: messy, context: context,
+                                                            suggested: suggested, effort: effort,
+                                                            status: { self.status = $0 })
+                let check = outcome.check
+                self.result = outcome.output
+                self.lastRun = (target: target, original: messy, rewrite: outcome.output, context: checkContext)
+                self.checkSummary = EvalRunner.summary(check.result, problem: check.problem, attempts: outcome.attempts)
                 self.checkPassed = check.result?.approved ?? true
-                self.phases = Phases.after(check.result, attempts: attempt)
+                self.phases = Phases.after(check.result, attempts: outcome.attempts)
                 if let found = check.result {
                     self.checkLines = (found.blocking + found.advisory.filter { $0.rule.hasPrefix("judge.") })
                         .prefix(3)
@@ -1194,18 +1382,39 @@ final class TranslatorState: ObservableObject {
 
     var canReportWrong: Bool { lastRun != nil && !isRunning }
 
+    /// One click files the current result as an approved calibration case. Every click grows the
+    /// approved set the judge needs before it can be armed (20 of each side).
+    func saveRightCase() {
+        guard let run = lastRun else { return }
+        caseStatus = "Saving..."
+        Task {
+            self.caseStatus = await EvalRunner.saveCase(target: run.target, original: run.original,
+                                                        rewrite: run.rewrite, context: run.context,
+                                                        why: "Marked right by the user in the app.", approved: true)
+        }
+    }
+
     func saveWrongCase() {
         let why = wrongReason.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let run = lastRun, !why.isEmpty else { return }
         caseStatus = "Saving..."
         Task {
-            self.caseStatus = await EvalRunner.saveRejectedCase(target: run.target, original: run.original,
-                                                                rewrite: run.rewrite, context: run.context, why: why)
+            self.caseStatus = await EvalRunner.saveCase(target: run.target, original: run.original,
+                                                        rewrite: run.rewrite, context: run.context,
+                                                        why: why, approved: false)
             if self.caseStatus.hasPrefix("Saved") {
                 self.reportingWrong = false
                 self.wrongReason = ""
             }
         }
+    }
+
+    /// Copies the rewrite and opens the maker's own site for it: claude.ai, chatgpt.com, Gemini or
+    /// Undermind. The sites take a pasted prompt, so nothing is sent on the user's behalf.
+    func copyAndOpenMaker() {
+        guard !result.isEmpty else { return }
+        copyResult()
+        NSWorkspace.shared.open(selectedTarget.maker.workspace)
     }
 
     func copyResult() {
@@ -1214,10 +1423,6 @@ final class TranslatorState: ObservableObject {
         NSPasteboard.general.setString(result, forType: .string)
     }
 }
-
-// The Claude mark's terracotta. One warm system, not two: the panel used to be amber and a
-// second warm palette beside it just fought for attention.
-let guideAccent = Color(red: 0.85, green: 0.47, blue: 0.34)
 
 /// A rung on the capability ladder. Brightness and height both rise with capability, so the
 /// ordering survives a colour-blind viewer and a bad monitor.
@@ -1247,42 +1452,13 @@ enum Ladder {
         }
     }
 
-    /// Four steps of the accent, dimmest to brightest. Kept above mid-luminance at the bottom so
-    /// the lowest rung stays legible on a dark background as well as a light one.
-    static func colour(_ index: Int, family: String) -> Color {
-        let coral: [Color] = [
-            Color(red: 0.50, green: 0.30, blue: 0.24),
-            Color(red: 0.63, green: 0.36, blue: 0.27),
-            Color(red: 0.78, green: 0.44, blue: 0.32),
-            Color(red: 0.94, green: 0.56, blue: 0.41),
-        ]
-        let slate: [Color] = [
-            Color(red: 0.34, green: 0.36, blue: 0.39),
-            Color(red: 0.48, green: 0.51, blue: 0.54),
-            Color(red: 0.63, green: 0.66, blue: 0.69),
-            Color(red: 0.82, green: 0.85, blue: 0.88),
-        ]
-        let ramp = family == "openai" ? slate : coral
-        return ramp[min(max(index, 0), ramp.count - 1)]
+    /// Four steps of the maker's own accent, dimmest to brightest. The lowest step stays bright
+    /// enough to read on the dark surface.
+    static func colour(_ index: Int, maker: Maker) -> Color {
+        maker.accent.opacity([0.40, 0.58, 0.78, 1.0][min(max(index, 0), 3)])
     }
 
     static func height(_ index: Int) -> CGFloat { [9, 17, 26, 36][min(max(index, 0), 3)] }
-
-    /// Which example shows when a level has several. Random at launch, advanced by every
-    /// assessment, so the examples rotate through the pool instead of freezing on the first.
-    static var turn = Int.random(in: 0..<997)
-
-    /// A row is "job; when it is worth paying for". A row without the second half shows alone.
-    /// A key filed more than once (`opus.2` three times) is a pool, and one of them shows per turn.
-    static func detail(_ id: String) -> [(job: String, why: String)] {
-        (1...5).compactMap {
-            let pool = Rubric.values("detail", "\(id).\($0)").filter { !$0.isEmpty }
-            guard !pool.isEmpty else { return nil }
-            let row = pool[(turn + $0) % pool.count]
-            let parts = row.split(separator: ";", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-            return (job: parts[0], why: parts.count > 1 ? parts[1] : "")
-        }
-    }
 }
 
 struct GuidePanel: View {
@@ -1292,6 +1468,8 @@ struct GuidePanel: View {
     /// jump every time the pointer crossed it. It lives on TranslatorState, not in @State: the
     /// macOS 27 Command Line Tools ship without SwiftUI's @State macro plugin, so @State fails to build.
     private var hovered: String? { state.hoveredRung }
+
+    private var accent: Color { state.selectedTarget.maker.accent }
 
     private var family: String {
         state.selectedTarget.fileName == "openai-prompting-guide.md" ? "openai" : "anthropic"
@@ -1305,18 +1483,27 @@ struct GuidePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ladder
-            detail
-            Divider().overlay(guideAccent.opacity(0.35))
-            verdict
-            Spacer(minLength: 0)
-            tokens
+            if state.selectedTarget.scored {
+                ladder
+                detail
+                labButton
+                Divider().overlay(accent.opacity(0.35))
+                verdict
+                Spacer(minLength: 0)
+                tokens
+            } else {
+                Text("No model ladder for \(state.selectedTarget.label), so no model or effort pick. Translate rewrites for it directly.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                labButton
+                Spacer(minLength: 0)
+            }
         }
         .padding(12)
         .frame(width: 232)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(guideAccent.opacity(0.09))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(guideAccent.opacity(0.5), lineWidth: 1))
+        .background(Cyber.panel)
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(accent.opacity(0.5), lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
@@ -1328,27 +1515,27 @@ struct GuidePanel: View {
                 VStack(spacing: 3) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(Ladder.colour(rung.index, family: family))
+                            .fill(Ladder.colour(rung.index, maker: state.selectedTarget.maker))
                             .opacity(rung.selectable ? 1 : 0.3)
                             .frame(height: Ladder.height(rung.index))
                         // The ring is the recommendation. Brightness is capability. Keeping them on
                         // separate channels stops the brightest rung reading as the one to pick.
                         if state.advice?.model.id == rung.id {
                             RoundedRectangle(cornerRadius: 3)
-                                .stroke(Color.primary, lineWidth: 1.5)
+                                .stroke(accent, lineWidth: 1.5)
                                 .frame(height: Ladder.height(rung.index) + 5)
                         }
                     }
                     .frame(height: 40, alignment: .bottom)
 
                     Text(rung.label)
-                        .font(.system(size: 8, weight: rung.id == state.selectedTarget.id ? .bold : .regular))
+                        .font(rung.id == state.selectedTarget.id ? Font.caption2.weight(.bold) : Font.caption2)
                         .foregroundStyle(rung.selectable ? .primary : .secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
 
                     Rectangle()
-                        .fill(rung.id == state.selectedTarget.id ? guideAccent : .clear)
+                        .fill(rung.id == state.selectedTarget.id ? accent : .clear)
                         .frame(height: 2)
                 }
                 .frame(maxWidth: .infinity)
@@ -1369,33 +1556,36 @@ struct GuidePanel: View {
 
     // MARK: Hover detail, fixed height
 
+    /// One line per effort level the rung really has, each a job from your own week. The full card
+    /// for a level (the maker's quote, what would break, the cost) is in the Effort lab.
     private var detail: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 2) {
             if let rung = focused {
                 Text("\(rung.label)  \(Rubric.value("price", rung.id, fallback: ""))")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(guideAccent)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(accent)
                 // One line each, no exceptions. A wrapped line would push this block past its
                 // reserved height and collide with the verdict underneath.
-                ForEach(Array(Ladder.detail(rung.id).enumerated()), id: \.offset) { _, row in
-                    Text(row.job)
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
+                ForEach(Array(Lab.lines(for: rung.id).enumerated()), id: \.offset) { _, row in
+                    (Text("\(row.level)  ").bold().foregroundColor(accent) + Text(row.job).foregroundColor(Cyber.mute))
+                        .font(.caption2)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                    if !row.why.isEmpty {
-                        Text(row.why)
-                            .font(.system(size: 8))
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
-                            .padding(.leading, 8)
-                    }
+                        .minimumScaleFactor(0.7)
                 }
             }
         }
-        .frame(height: 140, alignment: .top)
+        .frame(height: 112, alignment: .top)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var labButton: some View {
+        Button { state.openLab() } label: {
+            Label("Effort lab", systemImage: "slider.horizontal.3")
+                .font(.caption.weight(.bold))
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(CyberButtonStyle(tint: accent))
+        .help("Scrub through every effort level with a real job, the maker's own words, what would break and what it costs")
     }
 
     // MARK: Verdict
@@ -1406,7 +1596,7 @@ struct GuidePanel: View {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 4) {
                     Text(advice.verdict.badge)
-                        .font(.system(size: 9, weight: .heavy))
+                        .font(.caption2.weight(.heavy))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
@@ -1414,7 +1604,7 @@ struct GuidePanel: View {
                         .clipShape(RoundedRectangle(cornerRadius: 3))
                     if let why = advice.signals.first {
                         Text(why)
-                            .font(.system(size: 9))
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -1423,13 +1613,13 @@ struct GuidePanel: View {
                 Text(advice.model.id == "haiku"
                      ? "\(advice.model.label) · no effort setting"
                      : "\(advice.model.label) · \(advice.effort)")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.callout.weight(.bold))
                     .fixedSize(horizontal: false, vertical: true)
 
                 if state.awaitingChoice && !advice.verdict.needsDecision {
                     Button { state.rewriteAnyway() } label: {
                         Text("Translate for \(state.selectedTarget.label)")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.caption.weight(.semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .controlSize(.small)
@@ -1437,7 +1627,7 @@ struct GuidePanel: View {
                 } else if state.awaitingChoice {
                     Button { state.acceptRecommendation() } label: {
                         Text("Use \(advice.model.label)")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.caption.weight(.semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .controlSize(.small)
@@ -1445,7 +1635,7 @@ struct GuidePanel: View {
 
                     Button { state.rewriteAnyway() } label: {
                         Text("Keep \(state.selectedTarget.label)")
-                            .font(.system(size: 10))
+                            .font(.caption)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .controlSize(.small)
@@ -1453,7 +1643,7 @@ struct GuidePanel: View {
             }
         } else {
             Text("Press Translate for a model and effort pick.")
-                .font(.system(size: 10))
+                .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }
@@ -1464,7 +1654,7 @@ struct GuidePanel: View {
         Text(state.advice == nil
              ? "~\(TokenEstimate.format(state.translationInputTokens)) in"
              : "~\(TokenEstimate.format(state.translationInputTokens)) in · opus/\(state.engineEffort)")
-            .font(.system(size: 9, design: .monospaced))
+            .font(.system(.caption2, design: .monospaced))
             .foregroundStyle(.secondary)
     }
 }
@@ -1481,10 +1671,10 @@ struct ConfidenceChecklist: View {
             ForEach(criteria, id: \.label) { criterion in
                 HStack(spacing: 4) {
                     Image(systemName: criterion.met ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 9))
-                        .foregroundStyle(criterion.met ? Color(red: 0.16, green: 0.55, blue: 0.30) : .secondary)
+                        .font(.caption2)
+                        .foregroundStyle(criterion.met ? Cyber.ok : .secondary)
                     Text(criterion.label)
-                        .font(.system(size: 10))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .strikethrough(!criterion.met, color: .secondary)
                 }
@@ -1542,13 +1732,13 @@ struct PhaseList: View {
             ForEach(Array(phases.enumerated()), id: \.offset) { index, phase in
                 HStack(spacing: 4) {
                     Image(systemName: phase.ran ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 9))
-                        .foregroundStyle(phase.ran ? Color(red: 0.16, green: 0.55, blue: 0.30) : .secondary)
+                        .font(.caption2)
+                        .foregroundStyle(phase.ran ? Cyber.ok : .secondary)
                     Text("\(index + 1). \(phase.name)")
-                        .font(.system(size: 10))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(phase.detail)
-                        .font(.system(size: 9))
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
@@ -1570,7 +1760,7 @@ struct SourceLinksRow: View {
             ForEach(links, id: \.url) { link in
                 if let url = URL(string: link.url) {
                     Link(link.label, destination: url)
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(.caption2, design: .monospaced))
                 }
             }
         }
@@ -1589,7 +1779,7 @@ struct ChoiceAlert: View {
                  ? "\(state.selectedTarget.label) is weaker than this task needs. Guide suggests \(advice.model.label)."
                  : "Guide suggests \(advice.model.label).")
                 .font(.caption)
-                .foregroundStyle(guideAccent)
+                .foregroundStyle(state.selectedTarget.maker.accent)
             Button("Switch to \(advice.model.label)") { state.acceptRecommendation() }
                 .controlSize(.small)
                 .buttonStyle(.borderedProminent)
@@ -1597,7 +1787,81 @@ struct ChoiceAlert: View {
         } else if state.awaitingChoice {
             Text("Check the guide first.")
                 .font(.caption)
-                .foregroundStyle(guideAccent)
+                .foregroundStyle(state.selectedTarget.maker.accent)
+        }
+    }
+}
+
+
+// MARK: - Window
+
+/// One chip per target. The selected chip glows and pulses in its maker's colour; a dashed outline
+/// marks a product (an app or a search tool) rather than a model with a ladder.
+struct TargetChip: View {
+    let target: Target
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        let accent = target.maker.accent
+        Button(action: action) {
+            TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: Motion.reduced || !selected)) { timeline in
+                let t = Motion.reduced ? 0 : timeline.date.timeIntervalSinceReferenceDate
+                let glow = selected ? 4 + 6 * (0.5 + 0.5 * sin(t * 3.0)) : 0
+                Text(target.chipLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(selected ? Cyber.bg : Cyber.text)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(selected ? accent : Color.clear))
+                    .overlay(Capsule().strokeBorder(accent.opacity(selected ? 1 : 0.6),
+                                                    style: StrokeStyle(lineWidth: 1, dash: target.scored ? [] : [3, 2])))
+                    .shadow(color: accent.opacity(selected ? 0.9 : 0), radius: glow)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(target.label)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Targets grouped under the company that makes them. The mark and name open the maker's own site.
+struct MakerPicker: View {
+    @ObservedObject var state: TranslatorState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Maker.allCases) { maker in
+                HStack(spacing: 10) {
+                    Button { NSWorkspace.shared.open(maker.homepage) } label: {
+                        HStack(spacing: 7) {
+                            MakerMark(maker: maker, size: 28)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(maker.name.uppercased())
+                                    .font(.caption.weight(.heavy))
+                                    .tracking(1.6)
+                                    .foregroundStyle(maker.accent)
+                                Text(maker.homepage.host?.replacingOccurrences(of: "www.", with: "") ?? "")
+                                    .font(.caption2)
+                                    .foregroundStyle(Cyber.mute)
+                            }
+                        }
+                        .frame(width: 122, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Open \(maker.homepage.absoluteString)")
+                    .accessibilityLabel("\(maker.name) website")
+
+                    HStack(spacing: 6) {
+                        ForEach(targets.filter { $0.maker == maker }) { target in
+                            TargetChip(target: target, selected: state.selectedTarget.id == target.id) {
+                                state.selectedTarget = target
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1605,126 +1869,230 @@ struct ChoiceAlert: View {
 struct ContentView: View {
     @StateObject private var state = TranslatorState()
 
+    private var accent: Color { state.selectedTarget.maker.accent }
+    private var mono: Font { .system(.body, design: .monospaced) }
+
+    private func field<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .scrollContentBackground(.hidden)
+            .foregroundStyle(Cyber.text)
+            .background(Cyber.field)
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Cyber.pink.opacity(0.35), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+
+    private var sourceLine: Text {
+        let target = state.selectedTarget
+        return Text("Sourced ").foregroundColor(Cyber.mute)
+            + Text(target.sourceDate).foregroundColor(Cyber.yellow).bold()
+            + Text(" · ").foregroundColor(Cyber.mute)
+            + Text("\(target.confidencePercent)%").foregroundColor(Cyber.yellow).bold()
+            + Text(" confidence · \(target.maker.name)").foregroundColor(Cyber.mute)
+    }
+
+    private var checkCounts: String {
+        let met = state.selectedTarget.confidenceCriteria.filter(\.met).count
+        let total = state.selectedTarget.confidenceCriteria.count
+        let ran = state.phases.filter(\.ran).count
+        return "\(met) of \(total) source checks · \(ran) of \(state.phases.count) harness checks run"
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            GuidePanel(state: state)
+        ZStack {
+            Cyber.bg.ignoresSafeArea()
+            RadialGradient(colors: [Cyber.pink.opacity(0.14), .clear], center: .topLeading, startRadius: 10, endRadius: 520)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Rosetta Prompt").font(.title2).bold()
-                    Spacer()
-                    Picker("Target", selection: $state.selectedTarget) {
-                        ForEach(targets) { t in
-                            Text(t.label).tag(t)
-                        }
-                    }
-                    .frame(width: 220)
-                }
+            HStack(alignment: .top, spacing: 14) {
+                GuidePanel(state: state)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Sourced \(state.selectedTarget.sourceDate) · \(state.selectedTarget.confidencePercent)% confidence")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.gray)
-                    HStack(alignment: .top, spacing: 24) {
-                        ConfidenceChecklist(criteria: state.selectedTarget.confidenceCriteria)
-                        PhaseList(phases: state.phases)
-                    }
-                    SourceLinksRow(links: state.selectedTarget.sourceLinks)
-                }
+                VStack(alignment: .leading, spacing: 10) {
+                    GlitchTitle(text: "Rosetta Prompt")
 
-                Text("Messy prompt").font(.caption).foregroundStyle(.secondary)
-                TextEditor(text: $state.messyPrompt)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(minHeight: 90)
-                    .border(Color.gray.opacity(0.3))
+                    MakerPicker(state: state)
 
-                DisclosureGroup("Extra context (optional)") {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Anything the prompt leans on that a fresh model can't know: decisions already made, names, file paths.")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.gray)
+                        sourceLine.font(.caption)
+                        DisclosureGroup(isExpanded: $state.detailsOpen) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .top, spacing: 24) {
+                                    ConfidenceChecklist(criteria: state.selectedTarget.confidenceCriteria)
+                                    PhaseList(phases: state.phases)
+                                }
+                                SourceLinksRow(links: state.selectedTarget.sourceLinks)
+                            }
+                            .padding(.top, 3)
+                        } label: {
+                            Text(checkCounts).font(.caption).foregroundStyle(Cyber.pink)
+                        }
+                        .tint(Cyber.pink)
+                    }
 
-                        TextEditor(text: $state.extraContext)
-                            .font(.system(.body, design: .monospaced))
-                            .frame(minHeight: 50)
-                            .border(Color.gray.opacity(0.3))
+                    Text("MESSY PROMPT").font(.caption2.weight(.semibold)).tracking(1.4).foregroundStyle(Cyber.mute)
+                    field {
+                        TextEditor(text: $state.messyPrompt)
+                            .font(mono)
+                            .frame(minHeight: 90)
+                            .overlay(alignment: .topLeading) {
+                                if state.messyPrompt.isEmpty {
+                                    Text("Paste anything. It does not need to make sense.")
+                                        .font(mono)
+                                        .foregroundStyle(Cyber.mute.opacity(0.7))
+                                        .padding(.top, 8).padding(.leading, 9)
+                                        .allowsHitTesting(false)
+                                }
+                            }
+                            .accessibilityLabel("Messy prompt")
                     }
-                }
 
-                HStack {
-                    Button(state.isRunning ? (state.status.isEmpty ? "Translating..." : state.status) : "Translate") {
-                        state.translate()
-                    }
-                    .disabled(state.isRunning
-                              || state.awaitingChoice
-                              || state.messyPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .keyboardShortcut(.return, modifiers: .command)
-
-                    if state.isRunning {
-                        ProgressView().controlSize(.small)
-                    }
-                    ChoiceAlert(state: state)
-                    Spacer()
-                    if !state.errorText.isEmpty {
-                        Text(state.errorText).font(.caption).foregroundStyle(.red).lineLimit(2)
-                    }
-                }
-
-                HStack {
-                    Text("Result").font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    if state.canReportWrong {
-                        Button("This rewrite was wrong") { state.reportingWrong.toggle() }
-                            .font(.caption)
-                    }
-                    Button("Copy") { state.copyResult() }
-                        .disabled(state.result.isEmpty)
-                        .font(.caption)
-                }
-                if state.reportingWrong {
-                    HStack {
-                        TextField("What was wrong with it?", text: $state.wrongReason)
-                            .font(.caption)
-                            .onSubmit { state.saveWrongCase() }
-                        Button("Save case") { state.saveWrongCase() }
-                            .font(.caption)
-                            .disabled(state.wrongReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                }
-                if !state.caseStatus.isEmpty {
-                    Text(state.caseStatus)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
-                if !state.checkSummary.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(state.checkSummary)
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(state.checkPassed ? Color(red: 0.16, green: 0.55, blue: 0.30) : Color.red)
-                        ForEach(state.checkLines, id: \.self) { line in
-                            Text(line)
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
+                    DisclosureGroup("Extra context (optional)", isExpanded: $state.contextOpen) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Anything the prompt leans on that a fresh model can't know: decisions already made, names, file paths.")
+                                .font(.caption2)
+                                .foregroundStyle(Cyber.mute)
+                            HStack(spacing: 8) {
+                                Button { state.copyGrabContext() } label: {
+                                    Label(state.grabCopied ? "Copied" : "Copy /grab-context",
+                                          systemImage: state.grabCopied ? "checkmark" : "doc.on.doc")
+                                        .font(.caption.weight(.bold))
+                                }
+                                .buttonStyle(CyberButtonStyle(tint: Cyber.cyan))
+                                .accessibilityLabel("Copy the slash command grab-context")
+                                Text("Run it in the chat you are translating from, then paste its output here.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Cyber.mute)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            field {
+                                TextEditor(text: $state.extraContext)
+                                    .font(mono)
+                                    .frame(minHeight: 50)
+                                    .accessibilityLabel("Extra context")
+                            }
                         }
                     }
-                }
-                TextEditor(text: .constant(state.result))
-                    .font(.system(.body, design: .monospaced))
+                    .font(.caption)
+                    .foregroundStyle(Cyber.pink)
+                    .tint(Cyber.pink)
+
+                    HStack(spacing: 10) {
+                        Button { state.translate() } label: {
+                            Text((state.isRunning ? (state.status.isEmpty ? "Translating..." : state.status) : "Translate").uppercased())
+                                .tracking(1.5)
+                        }
+                        .buttonStyle(CyberButtonStyle(tint: Cyber.pink, filled: true))
+                        .disabled(state.isRunning
+                                  || state.awaitingChoice
+                                  || state.messyPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .keyboardShortcut(.return, modifiers: .command)
+
+                        Text("⌘↵").font(.caption).foregroundStyle(Cyber.mute)
+                        if state.isRunning { ProgressView().controlSize(.small).tint(accent) }
+                        ChoiceAlert(state: state)
+                        Spacer()
+                        if !state.errorText.isEmpty {
+                            Text(state.errorText).font(.caption).foregroundStyle(Color.red).lineLimit(2)
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        Text("RESULT").font(.caption2.weight(.semibold)).tracking(1.4).foregroundStyle(Cyber.mute)
+                        Spacer()
+                        if state.canReportWrong {
+                            Button("Right") { state.saveRightCase() }
+                                .buttonStyle(CyberButtonStyle(tint: Cyber.ok))
+                                .help("Files this result as an approved calibration case")
+                            Button("Wrong?") { state.reportingWrong.toggle() }
+                                .buttonStyle(CyberButtonStyle(tint: Cyber.pink))
+                                .help("Files this result as a rejected calibration case")
+                        }
+                        Button("Copy") { state.copyResult() }
+                            .buttonStyle(CyberButtonStyle(tint: Cyber.cyan))
+                            .disabled(state.result.isEmpty)
+                        Button("Copy and open \(state.selectedTarget.maker.workspaceName)") { state.copyAndOpenMaker() }
+                            .buttonStyle(CyberButtonStyle(tint: accent))
+                            .disabled(state.result.isEmpty)
+                            .help("Copies the rewrite, then opens \(state.selectedTarget.maker.workspace.absoluteString)")
+                    }
+                    if state.reportingWrong {
+                        HStack {
+                            TextField("What was wrong with it?", text: $state.wrongReason)
+                                .font(.caption)
+                                .onSubmit { state.saveWrongCase() }
+                            Button("Save case") { state.saveWrongCase() }
+                                .buttonStyle(CyberButtonStyle(tint: Cyber.pink))
+                                .disabled(state.wrongReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
+                    if !state.caseStatus.isEmpty {
+                        Text(state.caseStatus).font(.caption2).foregroundStyle(Cyber.mute)
+                    }
+                    if !state.checkSummary.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(state.checkSummary)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(state.checkPassed ? Cyber.ok : Color.red)
+                            ForEach(state.checkLines, id: \.self) { line in
+                                Text(line).font(.caption2).foregroundStyle(Cyber.mute).lineLimit(2)
+                            }
+                        }
+                    }
+                    // A plain selectable Text, not a TextEditor over a constant: VoiceOver reads it
+                    // as read-only text instead of announcing an editable field.
+                    ScrollView {
+                        Text(state.result)
+                            .font(mono)
+                            .foregroundStyle(Cyber.text)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .padding(8)
+                    }
                     .frame(minHeight: 110)
-                    .border(Color.gray.opacity(0.3))
+                    .background(Cyber.field)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Cyber.pink.opacity(0.35), lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .accessibilityLabel("Rewritten prompt")
+                }
+            }
+            .padding(16)
+
+            ScanOverlay().ignoresSafeArea()
+        }
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $state.labOpen) { LabSheet(state: state) }
+        .onAppear {
+            // Test hook for screenshots: ROSETTA_LAB=day|cost|race opens the Effort lab on launch.
+            if let mode = ProcessInfo.processInfo.environment["ROSETTA_LAB"] {
+                state.openLab()
+                state.labMode = ["day": 0, "cost": 1, "race": 2][mode] ?? 0
+                state.labIndex = Double(ProcessInfo.processInfo.environment["ROSETTA_LAB_LEVEL"].flatMap(Int.init) ?? 0)
+                state.labTargetID = ProcessInfo.processInfo.environment["ROSETTA_LAB_TARGET"] ?? "opus"
+                if state.labMode == 2 { state.kickRace() }
             }
         }
-        .padding(16)
-        // Pinned to the top: when the window is shorter than the content (a short screen, larger
-        // text), SwiftUI centred it and cut off the title and Target picker. Now only the bottom
-        // of the result box can run short, and the minimum height fits a 13-inch screen.
-        .frame(minWidth: 830, maxWidth: .infinity, minHeight: 560, maxHeight: .infinity, alignment: .top)
+        // Pinned to the top so a short window cuts off the bottom of the result box, never the title
+        // or the target rows. The minimum height fits a 13-inch screen.
+        .frame(minWidth: 930, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity, alignment: .top)
     }
 }
 
 @main
 struct RosettaPromptApp: App {
+    init() {
+        // `RosettaPrompt --selftest [--live]` audits every target from the command line without
+        // opening a window. It is the same code path the window uses.
+        if CommandLine.arguments.contains("--selftest") {
+            setvbuf(stdout, nil, _IOLBF, 0)
+            NSApplication.shared.setActivationPolicy(.prohibited)
+            let live = CommandLine.arguments.contains("--live")
+            Task { @MainActor in
+                let code = await SelfTest.run(live: live)
+                exit(code)
+            }
+        }
+    }
+
     var body: some Scene {
         WindowGroup("Rosetta Prompt") {
             ContentView()

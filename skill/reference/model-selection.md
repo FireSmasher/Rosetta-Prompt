@@ -1,8 +1,10 @@
 # Model selection guidance, distilled
 
-Sourced 5 September 2026. Confidence 95% for the Anthropic material: every directive in
-"The order of levers" and "Effort levels" is a quote or a close paraphrase of a primary
-Anthropic document, each listed under Sources. Confidence 60% for the numbers in the
+Last verified 30 September 2026. Sections were sourced on different dates: "Effort levels" and
+"The order of levers" on 5 September (the lever order corrected 24 September), the ladder table
+on 24 and 25 September, the Sonnet 5.5 row on 30 September. Confidence 95% for the Anthropic
+material: every directive in "The order of levers" and "Effort levels" is a quote or a close
+paraphrase of a primary Anthropic document, each listed under Sources. Confidence 60% for the numbers in the
 Rubric tables: those are this app's own calibration, not published by anyone, and they are
 marked as such where they appear.
 
@@ -18,10 +20,10 @@ completed task, and effort before model. Both are stated as general principles.
 - Choosing between models, cost per completed task, the order of experiments:
   https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
 - Model overview and context windows:
-  https://platform.claude.com/docs/en/about-claude/models/overview
-- Prices below are the Anthropic first-party API rates as carried in the bundled
-  `claude-api` skill's model table, cached 2026-06-24. Partner platforms (Bedrock,
-  Vertex) price separately.
+  https://platform.claude.com/docs/en/models/overview
+- Prices below are the Anthropic first-party API rates from the models overview page, last
+  read 24 September 2026 (the same rates the Anthropic prompting guide cites). Partner
+  platforms (Bedrock, Vertex) price separately.
 
 ## The order of levers
 
@@ -35,7 +37,9 @@ Anthropic's guidance is that **effort is the first lever and model is the second
 > number an advisor pairing has to beat."
 
 > "For most agent workloads, start with Claude Fable 5.1 at `low` effort and raise effort
-> where it misses."
+> where it misses." (Superseded on 24 September 2026: Anthropic now says to start agent work
+> on Claude Opus 5.5 at `medium` and move to Fable 5.1 only when evals at higher effort still
+> fall short. See the ladder table below.)
 
 So when a task looks over-provisioned, the documented first move is to keep the model and
 drop the effort, not to drop a tier. Dropping a tier is for a genuine mismatch of two
@@ -99,7 +103,7 @@ Per model:
   disabled. The Opus 5 advice it replaces: "Start with `high`, the default ... use `low` and
   `medium` liberally as your primary control for token cost and response time wherever your
   evals show quality holds."
-- **Sonnet 5**: defaults to `high`. `medium` is the "Cost-saving step-down from the default.
+- **Sonnet 5.5** (30 Sep 2026): defaults to `high`, levels recalibrated against Sonnet 5, so re-sweep. The quotes below are from the Sonnet 5 read of 16 Sep and are not restated for 5.5.  `medium` is the "Cost-saving step-down from the default.
   Comparable to Claude Sonnet 4.6 at high effort." `low` is "For high-volume or
   latency-sensitive workloads. Suitable for chat and non-coding use cases."
 - **Fable 5.1**: "Start with `high`, the default. Step up to `xhigh` or `max` for the most
@@ -116,17 +120,17 @@ answer. The app's output estimate is driven by task shape, never by effort.
 
 ## The ladder and what each tier is for
 
-Lowest to highest cost and capability: Haiku 4.5, Sonnet 5, Opus 5.5, Fable 5.1.
+Lowest to highest cost and capability: Haiku 4.5, Sonnet 5.5, Opus 5.5, Fable 5.1.
 
 | Model | Input $/1M | Output $/1M | Documented positioning |
 |---|---|---|---|
 | Claude Haiku 4.5 | $1 | $5 | "It fits high-volume work with checkable outputs, not long agentic loops." |
-| Claude Sonnet 5 | $2 | $10 | Mid tier. Its `medium` effort matches Sonnet 4.6 at `high`. |
+| Claude Sonnet 5.5 | $2 | $10 | Mid tier. Effort levels recalibrated against Sonnet 5, so re-sweep. Anthropic publishes no Sonnet 5.5 cost-per-task figure. |
 | Claude Opus 5.5 | $4 | $20 | Anthropic's default for most workloads. At `medium` it matched Fable 5.1 on the SWE-bench Pro subset for about a fifth of the cost per solved task. |
 | Claude Fable 5.1 | $10 | $50 | Frontier. "Use Claude Fable 5.1 for demanding reasoning and long-horizon agentic work, or when your evals on Claude Opus 5.5 at higher effort still fall short." (24 Sep 2026; until then Anthropic advised starting agent work on Fable 5.1 at `low`.) |
 
 Haiku 4.5 became a rewrite target on 16 September 2026 (the app was renamed from
-PromptTranslator to Rosetta Prompt the same day), so class 1 on the Anthropic ladder now
+Translate Prompt to Rosetta Prompt the same day), so class 1 on the Anthropic ladder now
 recommends `haiku`. Until then `sonnet` occupied both of the two lowest classes.
 
 GPT tiers, from `openai-prompting-guide.md` in this folder, not from Anthropic:
@@ -134,7 +138,7 @@ GPT tiers, from `openai-prompting-guide.md` in this folder, not from Anthropic:
 | Model | Input $/1M | Output $/1M | Positioning |
 |---|---|---|---|
 | GPT-6 Luna | $0.10 | $0.50 | "For cost-sensitive, high-volume workloads." Classification, extraction, formatting. |
-| GPT-6 Sol | $2 | $10 | "To balance intelligence and cost." Covers both middle classes, because GPT-6 has no Terra. |
+| GPT-6.1 Sol | $2 | $10 | "To balance intelligence and cost", "near-Astra performance at a lower cost" (30 Sep 2026). Covers both middle classes, because GPT-6 has no Terra. Replaced GPT-6 Sol on 29 Sep 2026. |
 | GPT-6 Astra | $10 | $50 | Most capable. OpenAI's own starting point: "If you're not sure where to start, use GPT-6 Astra." |
 
 Since 24 September 2026 the app offers GPT-6 only. GPT-6 Sol and Luna were
@@ -213,8 +217,9 @@ repository. `model-selection.local.example.md` is a starting point.
 
 The tables most worth making your own:
 
-- `detail`: the hover lines per rung. Use jobs you really run, so each effort level reads as
-  something you recognise.
+- `lab`: the example job for every model and effort level, shown in the guide panel and the
+  Effort lab. Use jobs you really run, so each effort level reads as something you recognise.
+  Unlike the other tables it merges row by row, so a level you leave out keeps the shipped job.
 - `stakes`: the words that floor a task at class 3 and `high` effort. Add what is costly to get
   wrong in your life or work (a permit, a medical question, a client name).
 - `not-stakes`: phrases that contain a stakes word without the stakes, if your work produces
@@ -230,6 +235,15 @@ breaks.
 
 The weights and thresholds are calibration, not documentation. Anthropic publishes no
 numeric difficulty rubric. Treat them as a starting point that earns changes from use.
+
+House style switches. `no_long_dash = on` makes the app tell the rewriter never to use an em or
+en dash, and makes `check_rewrite.py` reject one (`punct.long_dash`). It is one writer's
+preference, so it ships off; set `on` in `model-selection.local.md` to keep it on your machine only.
+
+```rubric
+@table style
+no_long_dash = off
+```
 
 ```rubric
 @table ladder
@@ -320,7 +334,13 @@ keeps crashing | debugging
 not working | debugging
 doesn't work | debugging
 stops working | debugging
-wrong | debugging
+wrong answer | debugging
+wrong result | debugging
+wrong output | debugging
+wrong total | debugging
+wrong number | debugging
+went wrong | debugging
+goes wrong | debugging
 slow | performance work
 faster | performance work
 review | a review
@@ -407,10 +427,16 @@ lease | contract terms
 ```
 
 Phrases that contain a stakes word without the stakes. They are blanked out before the stakes
-list is matched, so "schema contracts" no longer floors a prompt at Opus (found 16 September 2026).
+and heavy lists are matched, so "schema contracts" no longer floors a prompt at Opus (found 16
+September 2026), "contractions" does not read as a contract, and "provenance" does not read as
+"prove" (both found 30 September 2026). The bare word "wrong" is no longer a debugging signal
+on its own, since "what is wrong with my essay intro" is a critique, not a bug; the phrases
+"wrong answer", "wrong total", "went wrong" and similar still are.
 
 ```rubric
 @table not-stakes
+contraction
+provenance
 schema contract
 data contract
 api contract
@@ -458,7 +484,8 @@ screen next to it.
 
 ```rubric
 @table positioning
-sonnet | Mid tier, $2 in / $10 out per million. Its medium effort matches Sonnet 4.6 at high.
+haiku | Cheapest Claude model, $1 in / $5 out per million. High-volume work with checkable outputs; no effort setting.
+sonnet | Mid tier, $2 in / $10 out per million. Everyday coding and agent work; effort levels recalibrated, so re-sweep.
 opus | $4 in / $20 out per million. Anthropic's default for most work; at medium it matched Fable 5.1 for about a fifth of the cost per solved task.
 fable | Frontier, $10 in / $50 out per million. For demanding reasoning and long agentic runs, or when Opus 5.5 falls short.
 luna | Cheapest GPT-6 model, $0.10 in / $0.50 out per million. Cost-sensitive, high-volume work.
@@ -494,11 +521,11 @@ openai = luna, sol, astra
 ```rubric
 @table rung-label
 haiku | Haiku 4.5
-sonnet | Sonnet 5
+sonnet | Sonnet 5.5
 opus | Opus 5.5
 fable | Fable 5.1
 luna | Luna
-sol | Sol
+sol | Sol 6.1
 astra | Astra
 ```
 
@@ -513,64 +540,204 @@ sol | $2 / $10 per M
 astra | $10 / $50 per M
 ```
 
-Up to five lines of hover detail per rung, written as concrete jobs rather than restatements
-of the docs. No line states a model's default effort, because the panel is short. Claude rungs
-give one example job per effort level, all five, each chosen to illustrate that level's
-published description. Since 25 September 2026 a key may repeat (`opus.2` twice): the repeats form a pool, and the app shows one per turn, starting at random on launch and moving on with every assessment, so the examples rotate instead of freezing. The shipped rows are generic everyday jobs. They read best when they
-are jobs you actually run, so replace them with your own (see "Your own data"). Since
-16 September 2026 each of those rows is `job; worth it: when`, and the app shows the second half
-as a dimmer line under the first. Fable at `low` and `medium` lean on two findings in
-`anthropic-prompting-guide.md`: `low` is often competitive with Opus on cost per task while
-scoring higher, and `medium` roughly matches Fable 5 at lower cost. GPT rungs give four example jobs for the tier as a whole,
-because OpenAI publishes no per level behavioural guidance and inventing one example per GPT
-effort level would be fabrication dressed as a reference.
+Every rung of the ladder has an example job for every effort level the maker documents, in the
+`lab` table, keyed `model.level`. Each row is `job ;; why it is worth it`. The shipped rows are
+neutral everyday jobs. Your own, from your own week, go in `model-selection.local.md` (see "Your own
+data"), which overrides them row by row and never leaves your machine. The hover block in the
+guide panel shows one line per level from this table, and the Effort lab (the button under the
+ladder) shows the full card for one level at a time: the job, what it is worth, a quote or fact from
+the maker's own page with its link, what goes wrong there, and a cost meter.
 
-Haiku 4.5 is the one rung with no effort ladder at all: it is absent from the supported model
-list on https://platform.claude.com/docs/en/build-with-claude/effort and sending `effort` to
-it returns an error.
+The sourced half is public and is not meant to be overridden: `lab-fact` is the maker's own sentence
+for that level, `lab-break` is the maker's own caveat for it (a level with no published caveat has
+no row, and the card says so rather than inventing one), `lab-cost` is Anthropic's measured cost
+of Opus 5.5 at each effort level against `high`, and `lab-race` is Anthropic's Haiku 4.5 against
+Opus 5.5 figure. Every quote was checked against the fetched maker page on 30 September 2026, and
+every link must land on the maker's own domain (the self test enforces that).
+
+Levels are what each target really has, from `lab-levels`: Claude Fable, Opus and Sonnet have
+`low` to `max`. Haiku 4.5 has none. GPT-6 Luna has `none` to `max`, GPT-6.1 Sol and Astra `low` to
+`max`. The Gemini 3.8 Flash row uses its three thinking levels. The ChatGPT app uses its model
+picker (Instant, Medium, High, Extra High, Pro Standard, Pro Extended), set by the user. The Claude
+app and Undermind have no effort setting; the Claude app has one row, and Undermind has its two
+depths, quick and deep search. OpenAI's effort table is stated once for the parameter, so the same
+level sentence appears under Luna, Sol and Astra where the model page adds nothing level specific.
+(Until 30 September 2026 this file said OpenAI publishes no per level guidance. The reasoning guide
+has carried a per level table, so that statement was wrong and is corrected here.)
 
 ```rubric
-@table detail
-haiku.1 | Extract fields from 1000 emails
-haiku.2 | Tag, label, reformat, convert
-haiku.3 | Bulk translate short strings
-haiku.4 | Not for judgement calls
-haiku.5 | No effort parameter, it errors
-sonnet.1 | low · tag 300 support tickets by topic; worth it: bulk sorting you spot-check
-sonnet.2 | medium · tailor a CV to one job posting; worth it: everyday writing, low risk
-sonnet.2 | medium · plan a week of meals to a calorie target; worth it: routine, you check the numbers
-sonnet.3 | high · fix a script that crashes; worth it: one bug you can test fast
-sonnet.3 | high · fix a web route that returns errors; worth it: reproducible, one file
-sonnet.4 | xhigh · add an app screen end to end; worth it: a 30+ min run you won't watch
-sonnet.5 | max · last try before moving up to Opus; worth it: Sonnet stalls, stakes are low
-opus.1 | low · rename and file 40 scanned documents; worth it: fixed rules, a misfile costs you
-opus.2 | medium · draft a cover letter; worth it: a human reads it, tone matters
-opus.2 | medium · write outreach to someone you want to meet; worth it: one shot at a first impression
-opus.3 | high · find why a pipeline keeps retrying; worth it: cause unknown, spans several files
-opus.3 | high · find why a scheduled job fails silently; worth it: no error message, cause unknown
-opus.4 | xhigh · build a feature across 20 files; worth it: 30+ min run, rework costs more
-opus.5 | max · check a contract clause before signing; worth it: a wrong answer is expensive
-opus.5 | max · check a job offer against your visa's work limits; worth it: residence rides on it
-fable.1 | low · run a broad research sweep; worth it: only after Opus 5.5 missed sources
-fable.2 | medium · plan a multi-step data migration; worth it: close to high, for less
-fable.3 | high · design an encrypted data model; worth it: a wrong call means months of rework
-fable.4 | xhigh · rebuild a data pipeline overnight; worth it: hours unattended, one review at the end
-fable.5 | max · stress-test a research argument; worth it: one answer you'd stake a grade on
-luna.1 | Classify 1000 support tickets
-luna.2 | Pull fields into a CSV
-luna.3 | Reformat to a fixed template
-luna.4 | Bulk translate short strings
-luna.5 | Not for open ended judgement
-sol.1 | Day to day coding work
-sol.2 | Summarise a 40 page PDF
-sol.3 | Debug across several services
-sol.4 | Long multi step research
-sol.5 | Six effort levels, none to max
-astra.1 | Frontier reasoning, fewest tokens
-astra.2 | Deep multi file refactors
-astra.3 | Long horizon autonomous runs
-astra.4 | Costliest, use when Sol misses
-astra.5 | low through max, no none
+@table lab-levels
+fable = low, medium, high, xhigh, max
+opus = low, medium, high, xhigh, max
+sonnet = low, medium, high, xhigh, max
+haiku = none
+luna = none, low, medium, high, xhigh, max
+sol = low, medium, high, xhigh, max
+astra = low, medium, high, xhigh, max
+claudeapp = app
+chatgpt = instant, medium, high, extrahigh, prostandard, proextended
+gemini = low, medium, high
+undermind = quick, deep
+```
+
+```rubric
+@table lab-level-label
+none | none
+app | in a project
+instant | Instant
+extrahigh | Extra High
+prostandard | Pro Standard
+proextended | Pro Extended
+quick | Quick search
+deep | Deep search
+```
+
+```rubric
+@table lab-fact
+fable.low | Claude Fable 5.1 at low effort solved 88.6% of tasks for $0.54 per solved task, against 77.4% for $0.84 from Claude Sonnet 5 at its default ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+fable.medium | medium matched the default's accuracy at about 70% to 87% of its cost ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+fable.high | Start with high, the default. ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+fable.xhigh | Step up to xhigh or max for the most capability-sensitive agentic and coding work ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+fable.max | Absolute maximum capability with no constraints on token spending. ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+opus.low | on several coding evaluations low comes close to it at much lower cost ;; prompting-claude-opus-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5
+opus.medium | Claude Opus 5.5 at medium matches or exceeds Claude Opus 5 at high on coding and knowledge-work evaluations ;; prompting-claude-opus-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5
+opus.high | Spends as many tokens as the task needs for excellent results. ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+opus.xhigh | Long-running agentic and coding tasks (over 30 minutes) with token budgets in the millions ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+opus.max | Claude Opus 5.5 completed noticeably more of them correctly with this instruction, at both medium and max effort ;; prompting-claude-opus-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5
+sonnet.low | At low, it skips thinking on most simple requests. ;; prompting-claude-sonnet-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5
+sonnet.medium | Balanced approach with moderate token savings. ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+sonnet.high | Complex reasoning, difficult coding problems, agentic tasks ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+sonnet.xhigh | Extended capability for long-horizon work. ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+sonnet.max | Tasks requiring the deepest possible reasoning and most thorough analysis ;; build-with-claude/effort ;; https://platform.claude.com/docs/en/build-with-claude/effort
+haiku.none | at about a fifth of Claude Opus 5.5's cost per question, with 63% accuracy compared with 92% for Opus 5.5 ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+luna.none | Common use cases include voice, fast information retrieval, and classification. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.low | Common use cases include data analysis, drafting, execution-oriented coding, and customer support / chat assistant workflows. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.medium | GPT-6 Luna is our most efficient model for focused, high-volume tasks. ;; models/gpt-6-luna ;; https://developers.openai.com/api/docs/models/gpt-6-luna
+luna.high | Hard reasoning, complex debugging, deep planning, and high-value tasks where quality and intelligence matters more than latency. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.xhigh | Deep research, asynchronous workflows and agentic tasks that require long runs. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.max | Maximum reasoning for your most complex tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.low | Efficient reasoning with a modest latency increase. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.medium | GPT-6.1 Sol delivers near-Astra performance at a lower cost for complex coding, computer use, and professional work. ;; models/gpt-6.1-sol ;; https://developers.openai.com/api/docs/models/gpt-6.1-sol
+sol.high | Hard reasoning, complex debugging, deep planning, and high-value tasks where quality and intelligence matters more than latency. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.xhigh | Common use cases include security and code review, enterprise productivity, deeper research tasks, and challenging coding workflows. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.max | Maximum reasoning for your most complex tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.low | GPT-6 Astra and GPT-6.1 Sol do not support none; use low instead. ;; guides/latest-model ;; https://developers.openai.com/api/docs/guides/latest-model
+astra.medium | GPT-6 Astra is our most capable model for the most demanding work. Use it for complex reasoning, coding, computer use, research, and document creation. ;; models/gpt-6-astra ;; https://developers.openai.com/api/docs/models/gpt-6-astra
+astra.high | Recommended for complex workflows and agentic tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.xhigh | Deep research, asynchronous workflows and agentic tasks that require long runs. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.max | Maximum reasoning for your most complex tasks. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+claudeapp.app | Project instructions help Claude understand the specific context and requirements for a particular project. These instructions only apply to chats within that project. ;; support: personalization features ;; https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features
+chatgpt.instant | Users have the ability to decide whether Instant auto-switches to Medium for higher reasoning when required. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.medium | Thinking Standard is now Medium ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.high | Thinking Extended is now High ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.extrahigh | Thinking Heavy is now Extra High. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.prostandard | Pro Standard and Pro Extended remain available under Pro. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.proextended | Pro Standard and Pro Extended remain available under Pro. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+gemini.low | Simple tasks: Use minimal or low thinking for fact retrieval or classification ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+gemini.medium | Moderate tasks: Use default thinking for comparing concepts or creative reasoning ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+gemini.high | Complex tasks: Use maximum thinking for advanced coding, math, or multi-step planning ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+undermind.quick | search_papers is your main workhorse. It performs direct semantic search against titles and abstracts. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
+undermind.deep | Use it for self-contained queries that demand comprehensive, carefully ranked results ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
+```
+
+```rubric
+@table lab-break
+fable.low | at low, Claude Fable 5.1 calls search and retrieval tools less often ;; prompting-claude-fable-5-1 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1
+fable.xhigh | Long deliverables at xhigh or max effort take a long time or hit max_tokens ;; prompting-claude-fable-5-1 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1
+fable.max | it may draft much of that deliverable in its thinking and then write it out again as the reply, which means a longer wait and more output tokens ;; prompting-claude-fable-5-1 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1
+opus.low | With Claude Opus 5.5 at low, 13% of tasks failed ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+opus.medium | Claude Opus 5.5 scored about 2.5 points lower at its default, medium ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+opus.high | At a given level, Claude Opus 5.5 tends to think more per turn than Claude Opus 5 ;; prompting-claude-opus-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5
+opus.xhigh | xhigh scored about 1.4 points higher for 2.5 times the cost of high ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+opus.max | especially at xhigh and max. If you keep the effort value you set for Claude Opus 5, expect longer turns and more output tokens. ;; prompting-claude-opus-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5
+sonnet.low | At low effort, though, it sometimes reports a change as done without running a check that exercises it. ;; prompting-claude-sonnet-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5
+sonnet.xhigh | At these levels the model is especially thorough. After it finishes a task, it can start its own rounds of review and verification ;; prompting-claude-sonnet-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5
+sonnet.max | At these levels the model is especially thorough. After it finishes a task, it can start its own rounds of review and verification ;; prompting-claude-sonnet-5-5 ;; https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5
+haiku.none | fell much further behind on long coding tasks. It fits high-volume work with checkable outputs, not long agentic loops. ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+luna.none | Latency-critical tasks that do not benefit from any reasoning or multi-chained tool calls. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.high | Depending on the complexity of the task, evaluate both medium and high. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.xhigh | Only use when your evals show a clear benefit that justifies the extra latency and cost. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+luna.max | If you are currently using xhigh, evaluate if max results in stronger performance ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.medium | Compare it with Astra on your tasks to assess the tradeoff between quality and cost. ;; models/gpt-6.1-sol ;; https://developers.openai.com/api/docs/models/gpt-6.1-sol
+sol.high | Depending on the complexity of the task, evaluate both medium and high. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.xhigh | Only use when your evals show a clear benefit that justifies the extra latency and cost. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+sol.max | If you are currently using xhigh, evaluate if max results in stronger performance ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.high | Depending on the complexity of the task, evaluate both medium and high. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.xhigh | Only use when your evals show a clear benefit that justifies the extra latency and cost. ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+astra.max | If you are currently using xhigh, evaluate if max results in stronger performance ;; guides/reasoning (effort table) ;; https://developers.openai.com/api/docs/guides/reasoning
+claudeapp.app | Context is not shared across chats within a project unless the information is added into the project knowledge base. ;; support: create and manage projects ;; https://support.claude.com/en/articles/9519177-how-can-i-create-and-manage-projects
+chatgpt.instant | We're retiring automatic switching from Instant to Thinking (reasoning) for ChatGPT Plus and Pro users globally. ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.extrahigh | Extra High [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.prostandard | Pro Standard [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+chatgpt.proextended | Pro Extended [Pro plans only] ;; ChatGPT release notes ;; https://help.openai.com/en/articles/6825453-chatgpt-release-notes
+gemini.low | Gemini 3.8 Flash can use more tokens on longer running and complex tasks, by design. ;; gemini-api/docs/latest-model ;; https://ai.google.dev/gemini-api/docs/latest-model
+gemini.high | If the model hits this limit while reasoning, it stops generating with status "incomplete" and returns truncated or empty output (while still billing for any thinking tokens generated). ;; gemini-api/docs/thinking ;; https://ai.google.dev/gemini-api/docs/thinking
+undermind.quick | A narrow or empty search_papers result does not mean the relevant literature is absent. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
+undermind.deep | for which paper relevance can be evaluated without reading the full texts. It generally takes 2-5 minutes. ;; Undermind tool orientation ;; https://www.undermind.ai/mcp
+```
+
+```rubric
+@table lab-cost
+opus.low | 33 ;; about a third of the cost of high, about 8 points lower on SWE-bench Pro
+opus.medium | 70 ;; about 70% of the cost of high, about 2.5 points lower on SWE-bench Pro
+opus.high | 100 ;; the baseline
+opus.xhigh | 250 ;; 2.5 times the cost of high, about 1.4 points higher on SWE-bench Pro
+source | scored about 2.5 points lower at its default, medium, for about 70% of the cost, and about 8 points lower at low for about a third of the cost; xhigh scored about 1.4 points higher for 2.5 times the cost of high ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+```
+
+```rubric
+@table lab-race
+accuracy | 63 ;; 92
+cost | 20 ;; 100
+source | at about a fifth of Claude Opus 5.5's cost per question, with 63% accuracy compared with 92% for Opus 5.5 ;; optimizing-for-cost-and-intelligence ;; https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence
+```
+
+```rubric
+@table lab
+fable.low | Sweep fifty job boards for roles nobody advertises ;; a cheap wide sweep, and you read the shortlist
+fable.medium | Sort sixty papers into themes before a supervisor meeting ;; near high quality for less when a cheaper model loses the thread
+fable.high | Redesign how three of your tools hand work to each other ;; several things depend on the answer
+fable.xhigh | Rebuild a data pipeline overnight while you sleep ;; hours unattended, one review in the morning
+fable.max | Stress-test your argument the night before submitting ;; the one answer you would stake a grade on
+opus.low | File forty scanned documents by fixed rules ;; fixed rules, and a misfile costs you later
+opus.medium | Write a first note to someone who could open a door ;; one shot at a first impression
+opus.high | Find why a scheduled job dies silently at night ;; a silent failure, the cause could be anywhere
+opus.xhigh | Wire an application flow end to end, submit button included ;; a bad submit is public
+opus.max | Check a job offer against the limits of your permit ;; a wrong answer puts your residence at risk
+sonnet.low | Sort a week of time blocks into categories ;; you glance over the result anyway
+sonnet.medium | Turn a training week into a shopping list at your calories ;; routine, and you check the numbers
+sonnet.high | Fix the web route that returns errors on empty rows ;; one file, and a test tells you fast
+sonnet.xhigh | Build a waitlist page while you are at the gym ;; many small steps, nothing irreversible
+sonnet.max | One last pass at a stubborn bug before you pay for Opus ;; cheaper than Opus if it lands
+haiku.none | Label a backlog of thousands of emails by sender ;; checkable output, and a wrong label costs nothing
+luna.none | Turn a shop receipt into rows for a spending log ;; speed beats thought when the rows are fixed
+luna.low | Tag 300 job postings as part time or full time ;; a quick, cheap sort
+luna.medium | Pull dates and amounts out of a month of bank exports ;; cheap, and you check the totals
+luna.high | Reconcile a bank export against a workbook and explain the gaps ;; rarely, Sol is the next rung
+luna.xhigh | Find near duplicates across 500 tags ;; only if your evals show a gain
+luna.max | Re-check a finished relabel, label by label ;; usually a waste, try Sol first
+sol.low | Fix a typo level bug in a small script ;; a quick loop
+sol.medium | Summarise a 40 page reading before class ;; the default, balanced
+sol.high | Debug why a chain of steps breaks across three files ;; complex debugging, deep planning
+sol.xhigh | Review your own diff for security holes before you push ;; a public repo is forever
+sol.max | Plan a storage migration with every edge case ;; only if xhigh missed something
+astra.low | Sanity-check a meal plan against a protein target ;; rarely, Astra price for a simple job
+astra.medium | Plan a move across six periods in two cities ;; frontier model at its default effort
+astra.high | Pressure-test a permit plan against its conditions ;; a wrong answer costs residence
+astra.xhigh | Audit a whole register for contradictions overnight ;; a long run with one review
+astra.max | Decide the next city with every assumption attacked ;; it decides where you live
+claudeapp.app | Put a project's method rules into its instructions once ;; every chat in that project starts informed
+chatgpt.instant | Ask what a term on a payslip means ;; quick, and a wrong answer is cheap
+chatgpt.medium | Draft a short email to a parent: only the ask ;; balanced, and you edit it anyway
+chatgpt.high | Read a lease clause for what it lets the landlord do ;; a hard read, a wrong read costs a deposit
+chatgpt.extrahigh | Sanity-check a training block against your health flags ;; Pro plans only, use it when the answer touches your body
+chatgpt.prostandard | Read a 30 page letter and list every deadline ;; a missed deadline costs more than the wait
+chatgpt.proextended | Lay out a full launch plan with its risks in one sitting ;; the slowest setting, for the plan you would argue about for a week
+gemini.low | Classify a pile of time labels ;; retrieval grade work
+gemini.medium | Compare two hoodie suppliers side by side ;; moderate work, the default
+gemini.high | Work out unit economics with returns and VAT ;; multi step planning
+undermind.quick | Check what exists on graduates moving into work ;; a few top results in seconds
+undermind.deep | Find every paper on post-study retention for a thesis ;; 2 to 5 minutes, one well-aimed search usually covers it
 ```
 
 Haiku 4.5 sits at class 1 on the Anthropic ladder so the ring lands on the right rung.

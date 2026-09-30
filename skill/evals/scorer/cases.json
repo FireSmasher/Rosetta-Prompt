@@ -1,0 +1,122 @@
+[
+ [
+  "I want you to tell me what are the things that needs to be done by me, step by step,not just one line. I need explicit instructions like you're instructing a 10 year old.",
+  "sonnet"
+ ],
+ [
+  "so basically i have this python script that pulls my card transactions and it keeps giving wrong totals can you look at it and fix it",
+  "sonnet+"
+ ],
+ [
+  "write me a cover letter for this marketing internship at a city startup, make it sound like me not like a robot",
+  "sonnet+"
+ ],
+ [
+  "help me plan my week, I have class monday to thursday and gym and I need to fit in coursework and job applications somehow",
+  "sonnet"
+ ],
+ [
+  "summarize this article into 5 bullet points",
+  "haiku"
+ ],
+ [
+  "extract all the email addresses from this list and put them in a csv",
+  "haiku"
+ ],
+ [
+  "fix the grammar in this paragraph",
+  "haiku"
+ ],
+ [
+  "I need a prompt that makes an agent go through my job applications folder and figure out which ones I never followed up on and draft follow up emails for each one, keep it in my voice",
+  "opus"
+ ],
+ [
+  "can you make a landing page for my coffee shop, dark minimal vibe, with a waitlist signup form and it should work on mobile",
+  "sonnet+"
+ ],
+ [
+  "explain how the work visa route works for someone finishing a masters, what do I need and when",
+  "opus"
+ ],
+ [
+  "what's the best way to structure my research literature review, I have like 60 papers and don't know how to group them",
+  "sonnet+"
+ ],
+ [
+  "ok so the thing is I want an app that tracks my time in 15 minute blocks and shows me a weekly chart of where it went, and I want it to sync with my calendar, and categories should be editable",
+  "sonnet+"
+ ],
+ [
+  "rename these files so they all follow the pattern date_vendor_type",
+  "haiku"
+ ],
+ [
+  "review my CV and tell me what a recruiter at a consulting firm would think, be brutal",
+  "sonnet+"
+ ],
+ [
+  "give me a meal plan for the week, 2300 calories, 150g protein, cheap stuff from the supermarket",
+  "sonnet"
+ ],
+ [
+  "translate this email to French and keep it polite",
+  "haiku"
+ ],
+ [
+  "I have to reply to my landlord about the deposit, he's saying I damaged the floor but it was already like that, help me write something firm",
+  "opus"
+ ],
+ [
+  "make a newsletter issue about student visas in the Canada for international students",
+  "opus"
+ ],
+ [
+  "go through this code and make it faster, the page takes like 8 seconds to load",
+  "sonnet+"
+ ],
+ [
+  "write a linkedin post about what I learned at my internship",
+  "sonnet"
+ ],
+ [
+  "convert this list to a markdown table",
+  "haiku"
+ ],
+ [
+  "format these dates as YYYY-MM-DD",
+  "haiku"
+ ],
+ [
+  "tag each of these support tickets by topic",
+  "haiku"
+ ],
+ [
+  "shorten this to 100 words",
+  "haiku"
+ ],
+ [
+  "proofread my email before I send it",
+  "haiku"
+ ],
+ [
+  "pull the phone numbers out of this text",
+  "haiku"
+ ],
+ [
+  "sort these into categories: food, rent, transport",
+  "haiku"
+ ],
+ [
+  "my app crashes on launch, find the bug",
+  "sonnet+"
+ ],
+ [
+  "compare three laptops for a student under 1000 euros and tell me which to buy",
+  "sonnet+"
+ ],
+ [
+  "write a prompt for an agent that reviews pull requests across multiple repos, checks for security issues and posts comments, then summarizes findings weekly",
+  "opus"
+ ]
+]

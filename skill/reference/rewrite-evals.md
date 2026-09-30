@@ -33,7 +33,7 @@ relevant, and that most tasks need several of them. For a rewritten prompt those
 | Harness layer | In Rosetta Prompt |
 |---|---|
 | L1 deterministic evals | Code checks below. Run first. Any failure rejects the draft. |
-| L1 model evals | One Sonnet 5 judge call at `low` effort, yes/no questions, never scores. Runs only if the code checks pass. The judge sees the original, the context and the rewrite, never the rewriter's guidance or reasoning. |
+| L1 model evals | One Sonnet 5.5 judge call (pinned to the full id `claude-sonnet-5-5`, so an alias change can never silently swap the judge under a calibration) at `low` effort, yes/no questions, never scores. Runs only if the code checks pass. The judge sees the original, the context and the rewrite, never the rewriter's guidance or reasoning. |
 | L2 contract | The output must be exactly one prompt: the preamble, wrapper, leaked-tag and placeholder checks. |
 | L4 bounce loop | A draft with a code failure, or a judge "no" once the judge is armed, goes back to the rewriter with the check IDs and reasons. At most 3 attempts. After the third, the last draft is shown with its open failures listed, never silently. |
 | L5 replay | `evals/cases/` holds known failures and known-good rewrites. `check_rewrite.py replay` must pass 100% after any change to the checks, the guidance or the rewrite request. |
@@ -45,15 +45,17 @@ that had passed every code check on three of four instrumented runs. It is armed
 least 20 real cases, `check_rewrite.py calibrate` scores at least 18 of 20 right on each side
 (3 runs per case, majority), and the questions and judge model haven't changed since that
 report. Armed, it runs 3 times per check with the majority deciding, and a "no" blocks.
-`check_rewrite.py status` says which state it is in. On 16 September 2026 the calibration sets
-are empty, so the judge is advisory.
+`check_rewrite.py status` says which state it is in. The calibration counts change as cases are filed, so read them from `status`
+rather than from this page. While either set is under 20, the judge is advisory. Filing
+cases is one click each in the app: "This rewrite was wrong" files a rejected case and "This
+rewrite was right" files an approved one.
 
 ## Code checks
 
 | ID | Rejects when |
 |---|---|
 | `output.empty` | The rewrite is blank |
-| `punct.long_dash` | Any U+2013 or U+2014 character |
+| `punct.long_dash` | Any U+2013 or U+2014 character. Only when `no_long_dash = on` in the `style` table of `model-selection.md` (or the local file beside it). Off by default in the public tool |
 | `output.fence_wrapper` | The whole output is wrapped in a code fence |
 | `output.preamble` | The output opens with "Here is", "Sure", "Below is" and the like |
 | `output.trailing_note` | The last paragraph is commentary about the rewrite ("I've added", "Changes made", "Let me know") |
@@ -61,10 +63,14 @@ are empty, so the judge is advisory.
 | `grounding.placeholder` | `[ALL CAPS]` slots, `TBD`, `TODO`, `<insert ...>` or `{{VAR}}` that the original and context don't already contain |
 | `length.overbuilt` | Original at most `short_words` words, rewrite over `overbuilt_words` words |
 | `length.dropped` | Original at least `dropped_min_words` words, rewrite under `dropped_ratio` of its length |
-| `target.opus5_verify` | Opus 5.5 target (carried over from Opus 5) and the rewrite adds "double-check", "re-verify", "verification step" and similar |
-| `target.review_filter` | Opus 5.5 or Sonnet 5 target and the rewrite says "only report high-severity", "be conservative" or "don't nitpick" |
+| `target.opus_verify` | Opus 5.5 target and the rewrite adds "double-check", "re-verify", "verification step" and similar |
+| `target.review_filter` | Opus 5.5 or Sonnet 5.5 target and the rewrite says "only report high-severity", "be conservative" or "don't nitpick" |
 | `target.haiku_effort` | Haiku 4.5 target and the rewrite names an effort level |
 | `target.fable_antiformat` | Fable 5.1 target and the rewrite adds a blanket no-markdown/no-lists rule the original didn't ask for |
+| `target.think_aloud` | GPT-6 or Gemini target and the rewrite adds "think step by step", "chain of thought" or similar that the original didn't contain (both are reasoning models) |
+| `target.app_setting` | Claude app or ChatGPT app target and the rewrite names temperature, top_p, max tokens, stop sequences or an effort setting (a chat box has none of those controls) |
+| `target.undermind_boolean` | Undermind target and the rewrite turns the request into a Boolean query string |
+| `target.undermind_structure` | Undermind target and the rewrite adds a role line, XML tags or an effort level (the Undermind guide says none of it has a published effect) |
 
 Advisory only, never rejects: `grounding.new_figures` lists numbers in the rewrite that appear in
 neither the original nor the context. They are passed to the judge as a hint for
@@ -77,7 +83,7 @@ overbuilt_words = 350
 dropped_min_words = 150
 dropped_ratio = 0.2
 max_attempts = 3
-judge_model = sonnet
+judge_model = claude-sonnet-5-5
 judge_effort = low
 armed_min_cases = 20
 armed_min_rate = 0.9

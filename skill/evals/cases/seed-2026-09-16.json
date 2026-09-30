@@ -31,9 +31,9 @@
     "rewrite": "Fix the failing date parser test in the utils module. Before you finish, double-check your answer and add a final verification step. Then tell me in two sentences what was wrong.",
     "expected": "Rejected",
     "must_fail": [
-      "target.opus5_verify"
+      "target.opus_verify"
     ],
-    "why": "Prompting Claude Opus 5, Task scope and over-verification: remove explicit verification instructions."
+    "why": "Prompting Claude Opus 5.5 (carried over from Opus 5), Task scope and over-verification: remove explicit verification instructions."
   },
   {
     "id": "F-0005-haiku-effort",
