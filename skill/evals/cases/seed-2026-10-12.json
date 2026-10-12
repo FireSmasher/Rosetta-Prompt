@@ -28,5 +28,27 @@
   "expected": "Approved",
   "must_fail": [],
   "why": "Effort here is the user's own label for a ticket, not a model effort setting."
+ },
+ {
+  "id": "T-0014-trailing-note-is-users-text",
+  "target": "fable",
+  "original": "fix the typos in this note and keep my wording: i tink the meting is on tuesday",
+  "context": "",
+  "rewrite": "Fix the typos in the note below and keep my wording exactly as it is. Correct spelling only: do not rephrase or reorder anything. Return only the corrected note.\n\nNote: i tink the meting is on tuesday",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "The last paragraph is the user's own note under a label, not commentary about the rewrite. Seen live on 12 October 2026: it cost a second rewrite call on every run."
+ },
+ {
+  "id": "T-0015-trailing-note-is-commentary",
+  "target": "fable",
+  "original": "fix the typos in this note and keep my wording: i tink the meting is on tuesday",
+  "context": "",
+  "rewrite": "Fix the typos in the note inside the tags below and keep my wording exactly as it is. Return only the corrected note.\n\n<note>\ni tink the meting is on tuesday\n</note>\n\nNote: I kept your wording and only asked for spelling fixes.",
+  "expected": "Rejected",
+  "must_fail": [
+   "output.trailing_note"
+  ],
+  "why": "A closing note about what the rewriter did is commentary, and must still be sent back."
  }
 ]

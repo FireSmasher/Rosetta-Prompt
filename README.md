@@ -22,7 +22,8 @@ Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol a
    check sends the draft back, up to three attempts. While this runs a tracker shows the step
    (Score, Rewrite, Check), the try it is on and a clock, and **Stop** (Command-Period) ends the
    run and its model calls with your text left in the box. If a retry fails, you keep the draft
-   from the try before it, and checks that could not run show in yellow, not as a pass.
+   from the try before it, and checks that could not run show in yellow, not as a pass. When a
+   try is sent back, the result names the check that did it and the text it matched.
 4. **Learns from misses and hits.** "Wrong?" files the result as a rejected calibration case and
    "Right" as an approved one, on your machine.
 5. **Groups targets by maker** (Anthropic, OpenAI, Google, Undermind). Each group links to the

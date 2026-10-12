@@ -169,6 +169,10 @@ PREAMBLE = re.compile(r"^\s*(here('s| is| are)\b|sure\b|certainly\b|of course\b|
                       r"rewritten prompt\b|the rewritten prompt\b|i('ve| have) rewritten\b)", re.I)
 TRAILING = re.compile(r"^\s*(note:|notes:|changes made|what i changed|i('ve| have) (added|kept|removed|changed)|"
                       r"this rewrite\b|let me know\b)", re.I)
+# The same pattern, matched at the start of any line: the user's own text may carry the label
+# anywhere, not only on its first line.
+TRAILING_ANYWHERE = re.compile(TRAILING.pattern, re.I | re.M)
+NOTE_LABEL = re.compile(r"^\s*notes?:\s*", re.I)
 PLACEHOLDER = re.compile(r"\[[A-Z][A-Z0-9 _/\-]{2,}\]|\bTBD\b|\bTODO\b|<insert[^>]*>|\{\{[^}]+\}\}")
 OPUS_VERIFY = re.compile(r"double[- ]check|re-?verify|verification step|verify your (answer|work|output)|"
                          r"subagent to (verify|double)", re.I)
@@ -182,6 +186,19 @@ HAIKU_EFFORT = re.compile(r"--effort\b|\beffort\b[^.\n]{0,40}\b(low|medium|high|
                           r"\b(low|medium|high|xhigh|max)\b[- ]effort\b", re.I)
 ANTIFORMAT = re.compile(r"(do not|don'?t|never|avoid)( use)? (any )?(markdown|bullet|lists|headers|headings|bold)", re.I)
 FIGURE = re.compile("(?<![\\w.])(?:[$\\u20ac\\u00a3]\\s?\\d[\\d.,]*|\\d[\\d.,]*\\s?%|\\d{2,}(?:[.,]\\d+)*)")
+
+
+def users_own_note(paragraph, source):
+    """True when a paragraph labelled "Note:" is the user's material carried over, not commentary.
+
+    A rewrite of "fix the typos in this note: ..." may end with the note itself under that label.
+    Sending that back costs a paid retry for a draft that did nothing wrong.
+    """
+    if not NOTE_LABEL.match(paragraph):
+        return False
+    squash = lambda t: " ".join(t.lower().split())
+    body = squash(NOTE_LABEL.sub("", paragraph, count=1))
+    return len(body.split()) >= 3 and body in squash(source)
 
 
 def code_checks(target, original, rewrite, context):
@@ -207,7 +224,8 @@ def code_checks(target, original, rewrite, context):
         blocking.append(finding("output.preamble", first_line, "Start with the prompt itself, no lead-in."))
 
     last_para = re.split(r"\n\s*\n", text)[-1]
-    if TRAILING.search(last_para) and not TRAILING.search(original):
+    if (TRAILING.search(last_para) and not TRAILING_ANYWHERE.search(source)
+            and not users_own_note(last_para, source)):
         blocking.append(finding("output.trailing_note", last_para, "Drop commentary about the rewrite."))
 
     for tag in REQUEST_TAGS:

@@ -694,6 +694,9 @@ struct RewriteOutcome {
     let attempts: Int
     /// Set when a retry failed and the draft returned is the one from the try before it.
     var retryProblem: String = ""
+    /// One line per try that was sent back: which checks rejected it and on what. Each rejected
+    /// try is a paid rewrite call, so the reason is shown, not just the count.
+    var bounced: [String] = []
 }
 
 /// Where a run is, for the tracker beside the Stop button.
@@ -724,6 +727,7 @@ enum RewritePipeline {
         var output = ""
         var check: (result: CheckResult?, problem: String) = (nil, "")
         var maxAttempts: Int?
+        var bounced: [String] = []
         while true {
             try Task.checkCancellation()
             progress(RunProgress(stage: .rewriting, attempt: attempt, maxAttempts: maxAttempts))
@@ -743,7 +747,7 @@ enum RewritePipeline {
                 // one with its own check verdict, and say the retry did not happen.
                 guard attempt > 1 else { throw error }
                 return RewriteOutcome(output: output, check: check, attempts: attempt - 1,
-                                      retryProblem: error.localizedDescription)
+                                      retryProblem: error.localizedDescription, bounced: bounced)
             }
             output = draft
             progress(RunProgress(stage: .checking, attempt: attempt, maxAttempts: maxAttempts))
@@ -753,10 +757,12 @@ enum RewritePipeline {
             try Task.checkCancellation()
             maxAttempts = check.result?.maxAttempts
             guard let found = check.result, found.retry, attempt < found.maxAttempts else { break }
+            bounced.append("Try \(attempt) sent back by "
+                           + found.blocking.map { "\($0.rule) (\($0.text.prefix(80)))" }.joined(separator: ", "))
             retry = (draft: output, feedback: found.feedback)
             attempt += 1
         }
-        return RewriteOutcome(output: output, check: check, attempts: attempt)
+        return RewriteOutcome(output: output, check: check, attempts: attempt, bounced: bounced)
     }
 }
 
@@ -1600,6 +1606,7 @@ final class TranslatorState: ObservableObject {
                         .prefix(3)
                         .map { "\($0.rule): \($0.text)" }
                 }
+                self.checkLines = outcome.bounced + self.checkLines
                 if !outcome.retryProblem.isEmpty {
                     self.checkLines.insert("Try \(outcome.attempts + 1) failed, so this is the draft from try \(outcome.attempts): \(outcome.retryProblem)", at: 0)
                 }

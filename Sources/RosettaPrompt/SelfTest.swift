@@ -83,6 +83,7 @@ enum SelfTest {
             report(stages.contains { $0.hasPrefix("checking") }, "tracker moved from Rewrite to Check", stages.joined(separator: ", "))
             report(state.lastRunSeconds > 0, "run time recorded", String(format: "%.0fs", state.lastRunSeconds))
             print("      " + state.checkSummary)
+            for line in state.checkLines { print("      " + line) }
             print("      " + state.result.replacingOccurrences(of: "\n", with: " ").prefix(220))
             print("\n\(failures == 0 ? "ALL PASSED" : "\(failures) FAILED")")
             return Int32(failures)
