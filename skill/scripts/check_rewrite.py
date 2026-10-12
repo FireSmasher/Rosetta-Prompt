@@ -165,14 +165,31 @@ def verdict(eval_id, findings, kind, attempt, judge_model=None, runs=1, blocking
 
 # U+2013 en dash and U+2014 em dash.
 LONG_DASH_RE = re.compile("[\\u2013\\u2014]")
-PREAMBLE = re.compile(r"^\s*(here('s| is| are)\b|sure\b|certainly\b|of course\b|below is\b|okay\b|"
+PREAMBLE = re.compile(r"^\s*(sure\b|certainly\b|of course\b|okay\b|"
                       r"rewritten prompt\b|the rewritten prompt\b|i('ve| have) rewritten\b)", re.I)
+# "Here is" and "Below is" are a lead-in only when they introduce the prompt itself ("Here is the
+# rewritten prompt", "Here's a cleaner version"). "Below is a customer email." introduces the
+# material, which is how plenty of good prompts open.
+ABOUT_THE_REWRITE = (r"(?:prompt|rewrite|rewritten|rewrote|reworded|"
+                     r"(?:clean(?:er|ed)?(?:[- ]up)?|improved|revised|polished|reworked|tightened|updated|new|final) version)")
+PREAMBLE_INTRO = re.compile(r"^\s*(?:here(?:'s| is| are)|below (?:is|are))\b[^.\n]{0,80}?\b" + ABOUT_THE_REWRITE + r"\b", re.I)
+ABOUT_THE_REWRITE_RX = re.compile(r"\b" + ABOUT_THE_REWRITE + r"\b", re.I)
 TRAILING = re.compile(r"^\s*(note:|notes:|changes made|what i changed|i('ve| have) (added|kept|removed|changed)|"
                       r"this rewrite\b|let me know\b)", re.I)
 # The same pattern, matched at the start of any line: the user's own text may carry the label
 # anywhere, not only on its first line.
 TRAILING_ANYWHERE = re.compile(TRAILING.pattern, re.I | re.M)
 NOTE_LABEL = re.compile(r"^\s*notes?:\s*", re.I)
+# A closing "Note:" is commentary when it talks about the rewrite: what the rewriter did, the
+# original, the prompt. "Note: keep it under 100 words." is an instruction to the target model.
+EDIT_VERB = (r"(?:added|removed|kept|changed|assumed|dropped|preserved|tightened|restructured|"
+             r"reworded|rewrote|rewritten|clarified|inferred|guessed|filled in|left out)")
+NOTE_COMMENTARY = re.compile(
+    r"\bI(?:'ve| have)?\s+(?:also |only |just )?" + EDIT_VERB + r"\b"
+    r"|^\s*notes?:\s*(?:[-*]\s*)?" + EDIT_VERB + r"\b"
+    r"|\b(?:rewrite|rewritten|rewrote|reworded|rephrased)\b"
+    r"|\b(?:the|this|your) (?:original|prompt)\b"
+    r"|\bwas assumed\b|\bassumptions?\b", re.I)
 PLACEHOLDER = re.compile(r"\[[A-Z][A-Z0-9 _/\-]{2,}\]|\bTBD\b|\bTODO\b|<insert[^>]*>|\{\{[^}]+\}\}")
 OPUS_VERIFY = re.compile(r"double[- ]check|re-?verify|verification step|verify your (answer|work|output)|"
                          r"subagent to (verify|double)", re.I)
@@ -220,12 +237,15 @@ def code_checks(target, original, rewrite, context):
         blocking.append(finding("output.fence_wrapper", text[:40], "Return the prompt without a code fence around it."))
 
     first_line = text.split("\n", 1)[0]
-    if PREAMBLE.search(first_line):
+    # A prompt about prompts may open "Below is a prompt I wrote"; the user's own words settle it.
+    intro = PREAMBLE_INTRO.search(first_line) and not ABOUT_THE_REWRITE_RX.search(source)
+    if PREAMBLE.search(first_line) or intro:
         blocking.append(finding("output.preamble", first_line, "Start with the prompt itself, no lead-in."))
 
     last_para = re.split(r"\n\s*\n", text)[-1]
+    instruction_note = NOTE_LABEL.match(last_para) and not NOTE_COMMENTARY.search(last_para)
     if (TRAILING.search(last_para) and not TRAILING_ANYWHERE.search(source)
-            and not users_own_note(last_para, source)):
+            and not users_own_note(last_para, source) and not instruction_note):
         blocking.append(finding("output.trailing_note", last_para, "Drop commentary about the rewrite."))
 
     for tag in REQUEST_TAGS:

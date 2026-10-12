@@ -50,5 +50,49 @@
    "output.trailing_note"
   ],
   "why": "A closing note about what the rewriter did is commentary, and must still be sent back."
+ },
+ {
+  "id": "T-0016-opener-introduces-material",
+  "target": "sonnet",
+  "original": "reply to this customer email for me, short and kind, offer a replacement or refund: hi, my order arrived broken yesterday, what do i do now",
+  "context": "",
+  "rewrite": "Below is a customer email. Write a short, kind reply that apologises and offers a replacement or a refund, whichever the customer prefers. Return only the reply.\n\n<email>\nhi, my order arrived broken yesterday, what do i do now\n</email>",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "\"Below is a customer email\" introduces the material, not the rewrite. It is a normal way for a prompt to open."
+ },
+ {
+  "id": "T-0017-opener-introduces-rewrite",
+  "target": "sonnet",
+  "original": "reply to this customer email for me, short and kind, offer a replacement or refund: hi, my order arrived broken yesterday, what do i do now",
+  "context": "",
+  "rewrite": "Here's a cleaner version:\n\nWrite a short, kind reply to the customer email in the tags. Apologise and offer a replacement or a refund. Return only the reply.\n\n<email>\nhi, my order arrived broken yesterday, what do i do now\n</email>",
+  "expected": "Rejected",
+  "must_fail": [
+   "output.preamble"
+  ],
+  "why": "A lead-in that introduces the rewrite itself is not part of the prompt and must still be sent back."
+ },
+ {
+  "id": "T-0018-closing-note-is-instruction",
+  "target": "sonnet",
+  "original": "reply to this customer email for me, short and kind, offer a replacement or refund, under 100 words: hi, my order arrived broken yesterday, what do i do now",
+  "context": "",
+  "rewrite": "Write a kind reply to the customer email in the tags. Apologise and offer a replacement or a refund. Return only the reply.\n\n<email>\nhi, my order arrived broken yesterday, what do i do now\n</email>\n\nNote: keep it under 100 words.",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "A closing note that instructs the target model carries the user's own limit. It is not commentary about the rewrite."
+ },
+ {
+  "id": "T-0019-closing-note-lists-edits",
+  "target": "sonnet",
+  "original": "reply to this customer email for me, short and kind, offer a replacement or refund: hi, my order arrived broken yesterday, what do i do now",
+  "context": "",
+  "rewrite": "Write a short, kind reply to the customer email in the tags. Apologise and offer a replacement or a refund. Return only the reply.\n\n<email>\nhi, my order arrived broken yesterday, what do i do now\n</email>\n\nNotes: Added an output format and assumed the reply is in English.",
+  "expected": "Rejected",
+  "must_fail": [
+   "output.trailing_note"
+  ],
+  "why": "A closing note that lists what the rewriter added or assumed is commentary and must still be sent back."
  }
 ]

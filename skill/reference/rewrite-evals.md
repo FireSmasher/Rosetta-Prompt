@@ -57,8 +57,8 @@ rewrite was right" files an approved one.
 | `output.empty` | The rewrite is blank |
 | `punct.long_dash` | Any U+2013 or U+2014 character. Only when `no_long_dash = on` in the `style` table of `model-selection.md` (or the local file beside it). Off by default in the public tool |
 | `output.fence_wrapper` | The whole output is wrapped in a code fence |
-| `output.preamble` | The output opens with "Here is", "Sure", "Below is" and the like |
-| `output.trailing_note` | The last paragraph is commentary about the rewrite ("I've added", "Changes made", "Let me know") |
+| `output.preamble` | The output opens with a lead-in: "Sure", "Certainly", or "Here is" / "Below is" introducing the rewrite itself ("Here is the rewritten prompt", "Here's a cleaner version"). "Below is a customer email." introduces the material and passes |
+| `output.trailing_note` | The last paragraph is commentary about the rewrite ("I've added", "Changes made", "Let me know", "Note: I assumed..."). A closing "Note:" that instructs the target model ("Note: keep it under 100 words") or carries the user's own text passes |
 | `output.leaked_tag` | A tag from the rewrite request (`<messy_prompt>`, `<house_style>` ...) appears and wasn't in the original |
 | `grounding.placeholder` | `[ALL CAPS]` slots, `TBD`, `TODO`, `<insert ...>` or `{{VAR}}` that the original and context don't already contain |
 | `length.overbuilt` | Original at most `short_words` words, rewrite over `overbuilt_words` words |
