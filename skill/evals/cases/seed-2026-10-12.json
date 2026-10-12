@@ -1,0 +1,32 @@
+[
+ {
+  "id": "T-0011-opus-verify-asked",
+  "target": "opus",
+  "original": "double check my sums in this budget, rent 900, food 300, transport 80",
+  "context": "",
+  "rewrite": "Double-check the sums in the budget below and give me the correct total.\n\nRent 900, food 300, transport 80.",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "The user asked for the sums to be double checked, so the instruction is the task itself, not an added verification step."
+ },
+ {
+  "id": "T-0012-review-filter-asked",
+  "target": "sonnet",
+  "original": "estimate how long this kitchen refit takes, be conservative, the plumber is only free on fridays",
+  "context": "",
+  "rewrite": "Estimate how long the kitchen refit below will take. Be conservative in the estimate: the plumber is only free on Fridays, so plan around one plumbing day a week.",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "The user asked for a conservative estimate; the phrase is their requirement, not a review filter."
+ },
+ {
+  "id": "T-0013-haiku-effort-asked",
+  "target": "haiku",
+  "original": "go through these five tickets and tag the effort for each one as low, medium or high",
+  "context": "",
+  "rewrite": "For each of the five tickets below, tag the effort it needs as low, medium or high. Return one line per ticket: the ticket name, then the tag.",
+  "expected": "Approved",
+  "must_fail": [],
+  "why": "Effort here is the user's own label for a ticket, not a model effort setting."
+ }
+]

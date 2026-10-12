@@ -692,6 +692,8 @@ struct RewriteOutcome {
     let output: String
     let check: (result: CheckResult?, problem: String)
     let attempts: Int
+    /// Set when a retry failed and the draft returned is the one from the try before it.
+    var retryProblem: String = ""
 }
 
 /// Where a run is, for the tracker beside the Stop button.
@@ -725,13 +727,25 @@ enum RewritePipeline {
         while true {
             try Task.checkCancellation()
             progress(RunProgress(stage: .rewriting, attempt: attempt, maxAttempts: maxAttempts))
-            let request = try buildRequest(target: target, messyPrompt: messy, extraContext: context,
-                                           suggestedEffort: suggested, retry: retry, functions: functions)
-            output = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
-            if output.isEmpty {
-                throw NSError(domain: "RosettaPrompt", code: 3, userInfo: [
-                    NSLocalizedDescriptionKey: "The rewrite came back empty for \(target.label)."])
+            let draft: String
+            do {
+                let request = try buildRequest(target: target, messyPrompt: messy, extraContext: context,
+                                               suggestedEffort: suggested, retry: retry, functions: functions)
+                draft = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
+                if draft.isEmpty {
+                    throw NSError(domain: "RosettaPrompt", code: 3, userInfo: [
+                        NSLocalizedDescriptionKey: "The rewrite came back empty for \(target.label)."])
+                }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // A retry that fails must not cost the draft already paid for. Hand back the last
+                // one with its own check verdict, and say the retry did not happen.
+                guard attempt > 1 else { throw error }
+                return RewriteOutcome(output: output, check: check, attempts: attempt - 1,
+                                      retryProblem: error.localizedDescription)
             }
+            output = draft
             progress(RunProgress(stage: .checking, attempt: attempt, maxAttempts: maxAttempts))
             check = await EvalRunner.check(target: target, original: messy, rewrite: output,
                                            context: forChecker, attempt: attempt)
@@ -999,6 +1013,9 @@ struct Advice {
     let verdict: Verdict
     let signals: [String]
     let score: Int
+    /// The difficulty class, 1 to 4, the task was scored at. Effort for a model other than the
+    /// guide's pick is looked up from it.
+    let neededClass: Int
     let highStakes: Bool
     let expectedOutputTokens: Int
     /// One line on what the recommended tier costs and is for, from the rubric file.
@@ -1039,6 +1056,17 @@ enum Advisor {
         case "low", "medium": return advice.effort
         default: return "high"
         }
+    }
+
+    /// The effort to state for the model the prompt is really written for. The guide's effort
+    /// belongs to the model the guide would pick, and effort names do not mean the same thinking
+    /// on every model, so a model kept against the guide gets its own row from the same tables:
+    /// a class 3 task is `medium` on Opus 5.5 and `high` on Fable 5.1.
+    static func effort(for target: Target, advice: Advice) -> String {
+        if target.id == advice.model.id { return advice.effort }
+        var chosen = effort(forClass: advice.neededClass, model: target.id)
+        if advice.highStakes, chosen == "low" || chosen == "medium" { chosen = "high" }
+        return chosen
     }
 
     /// Effort for a difficulty class, per the levels table in the rubric file, which quotes
@@ -1287,6 +1315,7 @@ enum Advisor {
                       verdict: verdict,
                       signals: Array(signals.prefix(4)),
                       score: score,
+                      neededClass: needed,
                       highStakes: highStakes,
                       expectedOutputTokens: outputGuess(text: text,
                                                         inputTokens: TokenEstimate.count(raw),
@@ -1374,7 +1403,8 @@ final class TranslatorState: ObservableObject {
     private var runTask: Task<Void, Never>?
     /// One line on how the result fared against the eval checks, plus the findings behind it.
     @Published var checkSummary: String = ""
-    @Published var checkPassed: Bool = true
+    /// Nil when the checks could not run. That is shown as its own state, never as a pass.
+    @Published var checkPassed: Bool? = true
     @Published var checkLines: [String] = []
     /// The five harness layers as they applied to the last run.
     @Published var phases: [PhaseStatus] = Phases.idle
@@ -1413,11 +1443,15 @@ final class TranslatorState: ObservableObject {
         awaitingChoice = false
     }
 
+    /// The effort this task needs on the selected model, which is not always the guide's own
+    /// effort: that one belongs to the model the guide would pick.
+    var targetEffort: String? { advice.map { Advisor.effort(for: selectedTarget, advice: $0) } }
+
     /// Opens the Effort lab on the selected target, at the level this task was assessed for.
     func openLab() {
         labTargetID = selectedTarget.id
         let levels = Lab.levels(for: selectedTarget.id)
-        if let effort = advice?.effort, let at = levels.firstIndex(of: effort) { labIndex = Double(at) } else { labIndex = 0 }
+        if let effort = targetEffort, let at = levels.firstIndex(of: effort) { labIndex = Double(at) } else { labIndex = 0 }
         labOpen = true
     }
 
@@ -1544,7 +1578,7 @@ final class TranslatorState: ObservableObject {
         let context = extraContext
         let effort = target.scored ? Advisor.engineEffort(for: advice) : "medium"
         // Haiku 4.5 has no effort parameter, so the rewrite must never mention one.
-        let suggested = target.id == "haiku" ? nil : advice?.effort
+        let suggested = target.id == "haiku" ? nil : advice.map { Advisor.effort(for: target, advice: $0) }
         // The Fable, Opus and Sonnet guides tell the rewriter to state this level, and the request
         // passes it on. The judge only sees the original and the context, so without this line it
         // reads the app's own number as invented and bounces a draft that passed every code check.
@@ -1559,12 +1593,15 @@ final class TranslatorState: ObservableObject {
                 self.result = outcome.output
                 self.lastRun = (target: target, original: messy, rewrite: outcome.output, context: checkContext)
                 self.checkSummary = EvalRunner.summary(check.result, problem: check.problem, attempts: outcome.attempts)
-                self.checkPassed = check.result?.approved ?? true
+                self.checkPassed = check.result?.approved
                 self.phases = Phases.after(check.result, attempts: outcome.attempts)
                 if let found = check.result {
                     self.checkLines = (found.blocking + found.advisory.filter { $0.rule.hasPrefix("judge.") })
                         .prefix(3)
                         .map { "\($0.rule): \($0.text)" }
+                }
+                if !outcome.retryProblem.isEmpty {
+                    self.checkLines.insert("Try \(outcome.attempts + 1) failed, so this is the draft from try \(outcome.attempts): \(outcome.retryProblem)", at: 0)
                 }
                 self.lastRunSeconds = Date().timeIntervalSince(started)
                 if Self.remembers { UserDefaults.standard.set(self.lastRunSeconds, forKey: "lastRunSeconds") }
@@ -1766,8 +1803,14 @@ struct GuidePanel: View {
                     .foregroundStyle(accent)
                 // One line each, no exceptions. A wrapped line would push this block past its
                 // reserved height and collide with the verdict underneath.
+                // The level this task needs on this rung is marked, so the line to read is the
+                // one for the model in hand and not the guide's pick.
+                let applies = rung.target.flatMap { model in
+                    state.advice.map { Lab.label(Advisor.effort(for: model, advice: $0)) }
+                }
                 ForEach(Array(Lab.lines(for: rung.id).enumerated()), id: \.offset) { _, row in
-                    (Text("\(row.level)  ").bold().foregroundColor(accent) + Text(row.job).foregroundColor(Cyber.mute))
+                    (Text(row.level == applies ? "▸ \(row.level)  " : "\(row.level)  ").bold().foregroundColor(accent)
+                        + Text(row.job).foregroundColor(row.level == applies ? Cyber.text : Cyber.mute))
                         .font(.caption2)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -1821,7 +1864,7 @@ struct GuidePanel: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Writing for \(Self.pick(state.selectedTarget, advice.effort))")
+                    Text("Writing for \(Self.pick(state.selectedTarget, Advisor.effort(for: state.selectedTarget, advice: advice)))")
                         .font(.callout.weight(.bold))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -2305,7 +2348,8 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(state.checkSummary)
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(state.checkPassed ? Cyber.ok : Color.red)
+                                .foregroundStyle(state.checkPassed.map { $0 ? Cyber.ok : Color.red } ?? Cyber.yellow)
+                                .lineLimit(3)
                             ForEach(state.checkLines, id: \.self) { line in
                                 Text(line).font(.caption2).foregroundStyle(Cyber.mute).lineLimit(2)
                             }

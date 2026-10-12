@@ -12,14 +12,17 @@ Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol a
    **Switch to {model}** selects it and starts the rewrite in one click, and **Keep {model}**
    (the Translate button itself, so a second press of Command-Return) rewrites for the model you
    picked. A kept model is not asked about again until you pick another one, and the app
-   reopens on the model you used last. Nothing is sent to a model until you choose.
+   reopens on the model you used last. The effort a rewrite states is looked up for the model it
+   is written for, since effort names differ by model: the same task is `medium` on Opus 5.5 and
+   `high` on Fable 5.1. Nothing is sent to a model until you choose.
 2. **Rewrites** the prompt with Claude Opus (Claude Code's `opus` alias, Opus 5.5 since 22 September 2026), fed the general and model-specific sections of
    the distilled guides in `skill/reference/`.
 3. **Checks** the rewrite: code checks (no placeholders, no preamble or code
    fence, length sanity, target-specific rules), then an advisory Sonnet 5.5 judge. A failed code
    check sends the draft back, up to three attempts. While this runs a tracker shows the step
    (Score, Rewrite, Check), the try it is on and a clock, and **Stop** (Command-Period) ends the
-   run and its model calls with your text left in the box.
+   run and its model calls with your text left in the box. If a retry fails, you keep the draft
+   from the try before it, and checks that could not run show in yellow, not as a pass.
 4. **Learns from misses and hits.** "Wrong?" files the result as a rejected calibration case and
    "Right" as an approved one, on your machine.
 5. **Groups targets by maker** (Anthropic, OpenAI, Google, Undermind). Each group links to the

@@ -130,6 +130,41 @@ enum SelfTest {
                                      elapsed: 65, last: 48, stopping: false)
         report(line == "try 2 of 3 · 1:05 · last run 0:48", "run tracker line", line)
 
+        // Effort belongs to the model the prompt is written for. The same task is scored once, then
+        // each model reads its own row: a class 3 task is medium on Opus 5.5 and high on Fable 5.1.
+        // The scorer script must agree with the app on every fixture, curly quotes included.
+        let fixtures = [
+            "fix this typo",
+            "Summarise this article in three bullet points for a friend who has not read it yet and does not know the topic at all, keep it short and plain and skip the jargon, thanks a lot for the help with this one today",
+            "Compare three database designs for a booking app, recommend one, and explain the tradeoffs between cost, speed and how hard each is to change later. Then outline the migration in order, with what could go wrong at each step and how to roll back.",
+            "Review the \u{201C}contract\u{201D} please",
+            "Review the \"contract\" please",
+        ]
+        if let fable = targets.first(where: { $0.id == "fable" }), let opus = targets.first(where: { $0.id == "opus" }) {
+            if let hard = Advisor.assess(task: fixtures[2], context: "", selected: fable) {
+                let onFable = Advisor.effort(for: fable, advice: hard), onOpus = Advisor.effort(for: opus, advice: hard)
+                report(hard.neededClass == 3 && onOpus == Rubric.value("effort-by-model", "opus.3", fallback: "medium")
+                       && onFable == Rubric.value("effort-by-model", "fable.3", fallback: Rubric.value("effort", "3", fallback: "high")),
+                       "a kept model gets its own effort, not the guide's", "class \(hard.neededClass): opus \(onOpus), fable \(onFable)")
+            } else { report(false, "class 3 fixture is scored") }
+            if let risky = Advisor.assess(task: fixtures[3], context: "", selected: fable) {
+                report(risky.highStakes && Advisor.effort(for: fable, advice: risky) == "high", "stakes floor holds for a kept model",
+                       Advisor.effort(for: fable, advice: risky))
+            } else { report(false, "stakes fixture is scored") }
+
+            let scorer = (skillDir as NSString).appendingPathComponent("scripts/score_prompt.py")
+            for (index, task) in fixtures.enumerated() {
+                guard let swift = Advisor.assess(task: task, context: "", selected: fable) else {
+                    report(false, "fixture \(index + 1) is scored"); continue
+                }
+                let ran = try? await runProcess(exe: "/usr/bin/python3", arguments: [scorer, "--text", task, "--target", "fable"])
+                let json = ran.flatMap { $0.out.data(using: .utf8) }.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]
+                let theirs = "\(json?["model"] as? String ?? "?") \(json?["effort"] as? String ?? "none") class \(json?["class"] as? Int ?? 0) fable \(json?["target_effort"] as? String ?? "?")"
+                let ours = "\(swift.model.id) \(swift.model.id == "haiku" ? "none" : swift.effort) class \(swift.neededClass) fable \(Advisor.effort(for: fable, advice: swift))"
+                report(ours == theirs, "app and scorer script agree on fixture \(index + 1)", ours == theirs ? ours : "app: \(ours); script: \(theirs)")
+            }
+        }
+
         // Makers: every company has targets, and its workspace is on its own domains.
         for maker in Maker.allCases {
             let own = targets.filter { $0.maker == maker }
@@ -230,7 +265,7 @@ enum SelfTest {
             // 6. Live: one real rewrite through the same pipeline the window uses.
             if live {
                 guard claude != nil else { report(false, "live rewrite", "no claude CLI"); continue }
-                let suggested = target.id == "haiku" ? nil : advice?.effort
+                let suggested = target.id == "haiku" ? nil : advice.map { Advisor.effort(for: target, advice: $0) }
                 let effort = target.scored ? Advisor.engineEffort(for: advice) : "medium"
                 do {
                     let outcome = try await RewritePipeline.run(target: target, messy: task(for: target), context: "",

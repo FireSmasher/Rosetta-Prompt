@@ -234,19 +234,21 @@ def code_checks(target, original, rewrite, context):
 
     if target == "opus":
         m = OPUS_VERIFY.search(rewrite)
-        if m:
+        # Not when the user asked for it: checking the sums is then the task, and no retry can
+        # satisfy a rule that forbids the task's own words.
+        if m and not OPUS_VERIFY.search(source):
             blocking.append(finding("target.opus_verify", m.group(0),
                                     "Opus 5.5 already verifies its work. Remove the verification instruction.",
                                     [m.start(), m.end()]))
     if target in ("opus", "sonnet"):
         m = REVIEW_FILTER.search(rewrite)
-        if m:
+        if m and not REVIEW_FILTER.search(source):
             blocking.append(finding("target.review_filter", m.group(0),
                                     "Ask it to report every issue with confidence and severity, or give a concrete bar.",
                                     [m.start(), m.end()]))
     if target == "haiku":
         m = HAIKU_EFFORT.search(rewrite)
-        if m:
+        if m and not HAIKU_EFFORT.search(source):
             blocking.append(finding("target.haiku_effort", m.group(0),
                                     "Haiku 4.5 has no effort setting. Remove the effort line.",
                                     [m.start(), m.end()]))
@@ -341,10 +343,14 @@ def run_judge_once(prompt):
         capture_output=True, text=True, timeout=240, cwd=tmp, env=env, stdin=subprocess.DEVNULL)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or f"claude exited {proc.returncode}")
-    m = re.search(r"<result>\s*(\{.*\})\s*</result>", proc.stdout, re.S)
-    if not m:
+    # The last block wins: the analysis may quote a <result> tag before the real one.
+    blocks = re.findall(r"<result>\s*(\{.*?\})\s*</result>", proc.stdout, re.S)
+    if not blocks:
         raise RuntimeError("judge returned no <result> JSON")
-    answers = {a.get("id"): a for a in json.loads(m.group(1)).get("answers", [])}
+    try:
+        answers = {a.get("id"): a for a in json.loads(blocks[-1]).get("answers", [])}
+    except (ValueError, AttributeError) as exc:
+        raise RuntimeError(f"judge returned unreadable JSON: {exc}")
     missing = [qid for qid, _ in judge_questions() if qid not in answers]
     if missing:
         raise RuntimeError("judge skipped: " + ", ".join(missing))

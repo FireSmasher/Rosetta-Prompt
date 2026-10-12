@@ -5,8 +5,8 @@ Reads the rubric tables in reference/model-selection.md, with any table in
 model-selection.local.md replacing the default of the same name. Costs nothing: no model call.
 
     score_prompt.py --text "messy prompt" [--context ctx.txt] [--family anthropic|openai]
-    score_prompt.py --file messy.txt
-    score_prompt.py test cases.json    # [["prompt", "haiku|sonnet|sonnet+|opus|fable"], ...]
+    score_prompt.py --file messy.txt [--target fable]   # adds target_effort for a model you chose yourself
+    score_prompt.py test cases.json [more.json ...]    # [["prompt", "haiku|sonnet|sonnet+|opus|fable"], ...]
 
 Keep this in step with Advisor.assess() in Sources/RosettaPrompt/main.swift.
 """
@@ -53,10 +53,20 @@ def load_tables():
 
 
 def words(text):
-    return [w for w in re.split(r"[^0-9a-zA-ZÀ-￿]+", text) if w]
+    # Split on anything that is not a letter or a digit, as the app does. A character range
+    # here once kept curly quotes and long dashes inside words, so a quoted stakes word was missed.
+    return [w for w in re.split(r"[\W_]+", text) if w]
 
 
-def assess(task, tables, context="", family="anthropic"):
+def effort_for(model, needed, stakes, tables):
+    """Effort for a class on one model: its own effort-by-model row wins over the class default."""
+    effort = dict(tables.get("effort-by-model", [])).get(f"{model}.{needed}") or dict(tables["effort"])[str(needed)]
+    if stakes and effort in ("low", "medium"):
+        effort = "high"
+    return effort
+
+
+def assess(task, tables, context="", family="anthropic", target=None):
     th = dict(tables["thresholds"])
     num = lambda k: int(th[k])
     raw = (task + "\n\n" + context).strip()
@@ -109,19 +119,25 @@ def assess(task, tables, context="", family="anthropic"):
         needed = max(needed, 3)
     ladder = [x.strip() for x in dict(tables["ladder"])[family].split(",")]
     model = ladder[min(max(needed, 1), len(ladder)) - 1]
-    effort = dict(tables.get("effort-by-model", [])).get(f"{model}.{needed}") or dict(tables["effort"])[str(needed)]
-    if stakes and effort in ("low", "medium"):
-        effort = "high"
+    effort = effort_for(model, needed, stakes, tables)
     rewrite_effort = effort if effort in ("low", "medium") else "high"
-    return {"model": model, "effort": None if model == "haiku" else effort,
-            "rewrite_effort": rewrite_effort, "class": needed, "score": score,
-            "stakes": stakes, "signals": list(dict.fromkeys(signals))}
+    out = {"model": model, "effort": None if model == "haiku" else effort,
+           "rewrite_effort": rewrite_effort, "class": needed, "score": score,
+           "stakes": stakes, "signals": list(dict.fromkeys(signals))}
+    if target:
+        # The effort to state when the prompt is written for a model other than the recommended
+        # one. Effort names differ by model, so it is looked up for that model, not carried over.
+        out["target"] = target
+        out["target_effort"] = None if target == "haiku" else effort_for(target, needed, stakes, tables)
+    return out
 
 
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == "test":
         rank = {"haiku": 1, "luna": 1, "sonnet": 2, "opus": 3, "fable": 4}
-        tables, ok, cases = load_tables(), 0, json.load(open(sys.argv[2], encoding="utf-8"))
+        tables, ok, cases = load_tables(), 0, []
+        for path in sys.argv[2:]:
+            cases += json.load(open(path, encoding="utf-8"))
         for prompt, want in cases:
             got = assess(prompt, tables)["model"]
             good = rank[got] >= 2 if want == "sonnet+" else got == want
@@ -135,10 +151,11 @@ def main():
     ap.add_argument("--file")
     ap.add_argument("--context", help="file holding the established-context paragraph")
     ap.add_argument("--family", default="anthropic", choices=["anthropic", "openai"])
+    ap.add_argument("--target", help="id of the model the prompt will be written for, when you chose it yourself")
     a = ap.parse_args()
     task = a.text if a.text is not None else open(a.file, encoding="utf-8").read()
     ctx = open(a.context, encoding="utf-8").read() if a.context else ""
-    print(json.dumps(assess(task, load_tables(), ctx, a.family), indent=2))
+    print(json.dumps(assess(task, load_tables(), ctx, a.family, a.target), indent=2))
 
 
 if __name__ == "__main__":
