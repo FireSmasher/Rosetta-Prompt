@@ -21,6 +21,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -582,6 +583,9 @@ def main():
     p.set_defaults(fn=cmd_save_case)
 
     args = parser.parse_args()
+    # The app's Stop button sends SIGTERM. Turning it into an exit lets subprocess.run kill a judge
+    # call in flight, so a stopped run does not leave a paid model call running on its own.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
     sys.exit(args.fn(args))
 
 

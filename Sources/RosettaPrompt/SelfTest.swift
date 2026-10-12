@@ -26,6 +26,68 @@ enum SelfTest {
             if !ok { failures += 1 }
         }
 
+        // `--selftest --run` drives one real run through the same state object the window's buttons
+        // call: keep a model against the guide, stop a run in flight, then let one run finish.
+        if CommandLine.arguments.contains("--run") {
+            guard let fable = targets.first(where: { $0.id == "fable" }), ClaudeRunner.findExecutable() != nil else {
+                print("FAIL  run test needs the fable target and the claude CLI")
+                return 1
+            }
+            func wait(_ seconds: Double, until done: () -> Bool) async -> Bool {
+                let deadline = Date().addingTimeInterval(seconds)
+                while !done() {
+                    if Date() > deadline { return false }
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                }
+                return true
+            }
+            func children() -> Int {
+                let pgrep = Process()
+                pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+                pgrep.arguments = ["-P", String(ProcessInfo.processInfo.processIdentifier)]
+                let pipe = Pipe()
+                pgrep.standardOutput = pipe
+                try? pgrep.run()
+                let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+                pgrep.waitUntilExit()
+                // pgrep lists itself as a child while it runs.
+                return out.split(separator: "\n").filter { Int32($0) != pgrep.processIdentifier }.count
+            }
+            let state = TranslatorState()
+            state.selectedTarget = fable
+            state.messyPrompt = "fix the typos in this note and keep my wording: i tink the meting is on tuesday"
+            state.translate()
+            report(state.awaitingChoice && !state.isRunning, "first press waits on the guide",
+                   state.advice.map { "\($0.verdict.badge), guide picks \($0.model.id)" } ?? "no advice")
+            state.translate()
+            report(state.isRunning && state.selectedTarget.id == "fable", "second press keeps Fable and starts the run")
+            let launched = await wait(10) { children() > 0 }
+            report(launched && state.progress?.stage == .rewriting, "rewrite call is running", "\(children()) child")
+            let stopAt = Date()
+            state.stop()
+            let ended = await wait(6) { !state.isRunning }
+            report(ended && state.notice.hasPrefix("Stopped") && state.result.isEmpty && state.errorText.isEmpty,
+                   "Stop ends the run and says so", String(format: "%.2fs, notice: %@", Date().timeIntervalSince(stopAt), state.notice))
+            report(children() == 0, "no model call left running after Stop", "\(children()) child")
+            report(state.messyPrompt.hasPrefix("fix the typos"), "the text is still in the box after Stop")
+
+            // A kept model is not asked about again: one press now runs to the end.
+            state.translate()
+            report(state.isRunning && !state.awaitingChoice, "one press runs for the kept model")
+            var stages: [String] = []
+            let finished = await wait(300) {
+                if let now = state.progress { let name = "\(now.stage) \(now.attempt)"; if stages.last != name { stages.append(name) } }
+                return !state.isRunning
+            }
+            report(finished && !state.result.isEmpty, "run finishes with a result", "\(state.result.count) chars; \(state.errorText)")
+            report(stages.contains { $0.hasPrefix("checking") }, "tracker moved from Rewrite to Check", stages.joined(separator: ", "))
+            report(state.lastRunSeconds > 0, "run time recorded", String(format: "%.0fs", state.lastRunSeconds))
+            print("      " + state.checkSummary)
+            print("      " + state.result.replacingOccurrences(of: "\n", with: " ").prefix(220))
+            print("\n\(failures == 0 ? "ALL PASSED" : "\(failures) FAILED")")
+            return Int32(failures)
+        }
+
         print("Rosetta Prompt self test, \(live ? "live" : "offline"), \(targets.count) targets")
         report(FileManager.default.fileExists(atPath: referenceDir), "reference folder", referenceDir)
         report(FileManager.default.fileExists(atPath: checkerPath), "checker script")
@@ -33,6 +95,40 @@ enum SelfTest {
         report(claude != nil, "claude CLI found", claude ?? "not found, rewrites cannot run")
 
         report(TranslatorState().selectedTarget.id == "opus", "default target is Opus 5.5", TranslatorState().selectedTarget.id)
+
+        // Keeping a pick: the guide interrupts once for a model mismatch, a second press of
+        // Translate keeps the model, and a kept model is not asked about again until it changes.
+        if let fable = targets.first(where: { $0.id == "fable" }) {
+            let state = TranslatorState()
+            let small = "fix this typo"
+            state.selectedTarget = fable
+            state.messyPrompt = small
+            state.translate()
+            report(state.awaitingChoice && !state.isRunning, "guide waits on a model mismatch",
+                   state.advice.map { "\($0.verdict.badge), guide picks \($0.model.id)" } ?? "no advice")
+            state.keepSelected()
+            let advice = Advisor.assess(task: small, context: "", selected: fable)
+            report(state.selectedTarget.id == "fable" && !state.awaitingChoice && advice.map { !state.needsChoice($0) } == true,
+                   "a kept model stays selected and is not asked about again")
+            state.selectedTarget = targets[1]
+            state.selectedTarget = fable
+            report(advice.map { state.needsChoice($0) } == true, "picking another model clears the keep")
+        } else { report(false, "fable target exists") }
+
+        // Stop: cancelling the task ends the child process and surfaces as a cancellation.
+        let sleeper = Task { try await runProcess(exe: "/bin/sleep", arguments: ["30"]) }
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        let stopAt = Date()
+        sleeper.cancel()
+        var stopped = false
+        do { _ = try await sleeper.value } catch is CancellationError { stopped = true } catch {}
+        let stopTook = Date().timeIntervalSince(stopAt)
+        report(stopped && stopTook < 3, "a stopped run ends its child process", String(format: "%.2fs", stopTook))
+
+        // Tracker line: the try count appears from the second try, then the clock, then the yardstick.
+        let line = RunTracker.detail(RunProgress(stage: .rewriting, attempt: 2, maxAttempts: 3),
+                                     elapsed: 65, last: 48, stopping: false)
+        report(line == "try 2 of 3 · 1:05 · last run 0:48", "run tracker line", line)
 
         // Makers: every company has targets, and its workspace is on its own domains.
         for maker in Maker.allCases {

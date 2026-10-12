@@ -9,13 +9,17 @@ Targets: Claude Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 4.5; GPT-6 Luna, Sol a
 
 1. **Picks the model and effort first, for free.** A local scoring program reads your prompt and
    says whether the selected target is the right size. If it suggests a lower or higher model,
-   **Switch to {model}** selects it and starts the rewrite in one click. Nothing is sent to a
-   model until you choose.
+   **Switch to {model}** selects it and starts the rewrite in one click, and **Keep {model}**
+   (the Translate button itself, so a second press of Command-Return) rewrites for the model you
+   picked. A kept model is not asked about again until you pick another one, and the app
+   reopens on the model you used last. Nothing is sent to a model until you choose.
 2. **Rewrites** the prompt with Claude Opus (Claude Code's `opus` alias, Opus 5.5 since 22 September 2026), fed the general and model-specific sections of
    the distilled guides in `skill/reference/`.
 3. **Checks** the rewrite: code checks (no placeholders, no preamble or code
    fence, length sanity, target-specific rules), then an advisory Sonnet 5.5 judge. A failed code
-   check sends the draft back, up to three attempts.
+   check sends the draft back, up to three attempts. While this runs a tracker shows the step
+   (Score, Rewrite, Check), the try it is on and a clock, and **Stop** (Command-Period) ends the
+   run and its model calls with your text left in the box.
 4. **Learns from misses and hits.** "Wrong?" files the result as a rejected calibration case and
    "Right" as an approved one, on your machine.
 5. **Groups targets by maker** (Anthropic, OpenAI, Google, Undermind). Each group links to the
@@ -78,6 +82,7 @@ python3 skill/scripts/check_rewrite.py status   # is the judge armed?
 python3 skill/scripts/score_prompt.py test skill/evals/scorer/cases.json   # scorer regression set
 ~/Applications/RosettaPrompt.app/Contents/MacOS/RosettaPrompt --selftest        # audit every target offline
 ~/Applications/RosettaPrompt.app/Contents/MacOS/RosettaPrompt --selftest --live # plus one real rewrite each (spends credits)
+~/Applications/RosettaPrompt.app/Contents/MacOS/RosettaPrompt --selftest --run  # keep a model, stop a run, finish a run (spends credits)
 ```
 
 The self test checks, for every target, that its guide sections load, its request builds, every

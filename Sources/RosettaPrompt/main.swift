@@ -453,11 +453,58 @@ enum ClaudeRunner {
     }
 }
 
+/// Holds the running child so a cancelled task can stop it. The cancel handler fires on whatever
+/// thread cancels the task while the child is started on a background queue, hence the lock.
+final class ProcessBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: Process?
+    private var cancelled = false
+
+    var wasCancelled: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return cancelled
+    }
+
+    /// Called once the child is running. A cancel that arrived before launch stops it here.
+    func started(_ child: Process) {
+        lock.lock()
+        process = child
+        let stopNow = cancelled
+        lock.unlock()
+        if stopNow { Self.stop(child) }
+    }
+
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        let child = process
+        lock.unlock()
+        if let child { Self.stop(child) }
+    }
+
+    /// SIGTERM first, so the checker script can stop its own judge call, then SIGKILL for a child
+    /// that has not gone two seconds later.
+    private static func stop(_ child: Process) {
+        guard child.isRunning else { return }
+        child.terminate()
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+            if child.isRunning { kill(child.processIdentifier, SIGKILL) }
+        }
+    }
+}
+
 /// Runs a child process off the main thread with the environment every child of this app needs.
+/// Cancelling the calling task stops the child and throws `CancellationError`.
 func runProcess(exe: String, arguments: [String], extraEnv: [String: String] = [:]) async throws
     -> (status: Int32, out: String, err: String) {
-    try await withCheckedThrowingContinuation { continuation in
+    let box = ProcessBox()
+    return try await withTaskCancellationHandler {
+        try await withCheckedThrowingContinuation { continuation in
         DispatchQueue.global(qos: .userInitiated).async {
+            if box.wasCancelled {
+                continuation.resume(throwing: CancellationError())
+                return
+            }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: exe)
             process.arguments = arguments
@@ -489,16 +536,24 @@ func runProcess(exe: String, arguments: [String], extraEnv: [String: String] = [
                 continuation.resume(throwing: error)
                 return
             }
+            box.started(process)
             // Drain both pipes before waiting. The checker prints a few KB of JSON, and a full
             // pipe buffer would otherwise leave the child blocked on write forever.
             let outData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
             let errData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
             process.waitUntilExit()
 
+            if box.wasCancelled {
+                continuation.resume(throwing: CancellationError())
+                return
+            }
             continuation.resume(returning: (status: process.terminationStatus,
                                             out: String(data: outData, encoding: .utf8) ?? "",
                                             err: String(data: errData, encoding: .utf8) ?? ""))
         }
+        }
+    } onCancel: {
+        box.cancel()
     }
 }
 
@@ -639,6 +694,15 @@ struct RewriteOutcome {
     let attempts: Int
 }
 
+/// Where a run is, for the tracker beside the Stop button.
+struct RunProgress: Equatable {
+    enum Stage { case rewriting, checking }
+    let stage: Stage
+    let attempt: Int
+    /// The checker's attempt cap. Unknown until the first check has come back.
+    let maxAttempts: Int?
+}
+
 @MainActor
 enum RewritePipeline {
     /// The effort the checker's judge is told the app itself supplied, so it is not read as invented.
@@ -651,14 +715,16 @@ enum RewritePipeline {
     /// Harness L4 bounce loop: rewrite, check, and on a failed check send the draft back with the
     /// reasons. The script sets the attempt cap; the last draft is always returned.
     static func run(target: Target, messy: String, context: String, suggested: String?, effort: String, functions: [Target] = [],
-                    status: (String) -> Void = { _ in }) async throws -> RewriteOutcome {
+                    progress: (RunProgress) -> Void = { _ in }) async throws -> RewriteOutcome {
         let forChecker = checkContext(context, target: target, suggested: suggested)
         var attempt = 1
         var retry: (draft: String, feedback: String)?
         var output = ""
         var check: (result: CheckResult?, problem: String) = (nil, "")
+        var maxAttempts: Int?
         while true {
-            status(attempt == 1 ? "Rewriting..." : "Retrying (\(attempt))...")
+            try Task.checkCancellation()
+            progress(RunProgress(stage: .rewriting, attempt: attempt, maxAttempts: maxAttempts))
             let request = try buildRequest(target: target, messyPrompt: messy, extraContext: context,
                                            suggestedEffort: suggested, retry: retry, functions: functions)
             output = try await ClaudeRunner.run(prompt: request, model: "opus", effort: effort)
@@ -666,9 +732,12 @@ enum RewritePipeline {
                 throw NSError(domain: "RosettaPrompt", code: 3, userInfo: [
                     NSLocalizedDescriptionKey: "The rewrite came back empty for \(target.label)."])
             }
-            status("Checking...")
+            progress(RunProgress(stage: .checking, attempt: attempt, maxAttempts: maxAttempts))
             check = await EvalRunner.check(target: target, original: messy, rewrite: output,
                                            context: forChecker, attempt: attempt)
+            // The checker swallows its own errors, so a Stop during the check is caught here.
+            try Task.checkCancellation()
+            maxAttempts = check.result?.maxAttempts
             guard let found = check.result, found.retry, attempt < found.maxAttempts else { break }
             retry = (draft: output, feedback: found.feedback)
             attempt += 1
@@ -1258,7 +1327,27 @@ final class TranslatorState: ObservableObject {
     @Published var messyPrompt: String = "" { didSet { clearAdvice() } }
     @Published var extraContext: String = "" { didSet { clearAdvice() } }
     @Published var functionIDs: Set<String> = [] { didSet { clearAdvice() } }
-    @Published var selectedTarget: Target = targets[1] { didSet { if selectedTarget.maker != .google { functionIDs = [] }; clearAdvice() } } // Opus 5.5 default: general purpose, no assumed audience
+    /// The model picked last time, so a pick outlives a relaunch. First launch falls back to
+    /// Opus 5.5: general purpose, no assumed audience. The self test never reads or writes it.
+    nonisolated private static let remembers = !CommandLine.arguments.contains("--selftest")
+    nonisolated private static let targetKey = "selectedTargetID"
+    nonisolated private static var rememberedTarget: Target {
+        let id = remembers ? UserDefaults.standard.string(forKey: targetKey) : nil
+        return targets.first { $0.id == id && !$0.isFunction } ?? targets[1]
+    }
+    @Published var selectedTarget: Target = TranslatorState.rememberedTarget {
+        didSet {
+            if selectedTarget.maker != .google { functionIDs = [] }
+            if selectedTarget.id != oldValue.id {
+                keptTargetID = nil
+                if Self.remembers { UserDefaults.standard.set(selectedTarget.id, forKey: Self.targetKey) }
+            }
+            clearAdvice()
+        }
+    }
+    /// The model the user chose to keep against the guide. While it stays selected the guide still
+    /// shows its verdict but stops interrupting; picking any other model clears it.
+    private(set) var keptTargetID: String?
     @Published var result: String = ""
     /// The Gemini functions switched on with the selected model, in a fixed order.
     var activeFunctions: [Target] { targets.filter { $0.isFunction && functionIDs.contains($0.id) } }
@@ -1273,8 +1362,16 @@ final class TranslatorState: ObservableObject {
     @Published var hoveredRung: String?  // the guide ladder rung under the pointer; see GuidePanel
     @Published var isRunning: Bool = false
     @Published var errorText: String = ""
-    /// What the run is doing right now: rewriting, checking, or retrying.
-    @Published var status: String = ""
+    /// What the run is doing right now, for the tracker: the step, the attempt, when it started.
+    @Published var progress: RunProgress?
+    @Published var runSteps: [String] = []
+    @Published var runStarted: Date?
+    @Published var stopping = false
+    /// How long the last finished run took, shown beside the clock as a yardstick.
+    @Published var lastRunSeconds: Double = TranslatorState.remembers ? UserDefaults.standard.double(forKey: "lastRunSeconds") : 0
+    /// A plain note beside Translate, such as the line shown after Stop. Not an error.
+    @Published var notice: String = ""
+    private var runTask: Task<Void, Never>?
     /// One line on how the result fared against the eval checks, plus the findings behind it.
     @Published var checkSummary: String = ""
     @Published var checkPassed: Bool = true
@@ -1358,8 +1455,11 @@ final class TranslatorState: ObservableObject {
     /// Assess first, always, and stop there. The model and effort pick is shown before any spend;
     /// the rewrite starts only when the user presses one of the guide's buttons.
     func translate() {
-        guard !messyPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard !isRunning, !messyPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        // A second press while the guide waits is the user keeping their own pick.
+        if awaitingChoice { rewriteAnyway(); return }
         errorText = ""
+        notice = ""
         result = ""
 
         mutating = true
@@ -1371,11 +1471,31 @@ final class TranslatorState: ObservableObject {
             if !selectedTarget.scored { rewrite(for: selectedTarget) }
             return
         }
-        if advice.verdict.needsDecision {
+        if needsChoice(advice) {
             awaitingChoice = true
         } else {
             rewrite(for: selectedTarget)
         }
+    }
+
+    /// The guide interrupts only for a real model mismatch, and only until the user has kept the
+    /// selected model once.
+    func needsChoice(_ advice: Advice) -> Bool {
+        advice.verdict.needsDecision && keptTargetID != selectedTarget.id
+    }
+
+    /// Keep the selected model against the guide. It then stays kept for every prompt until another
+    /// model is picked.
+    func keepSelected() {
+        keptTargetID = selectedTarget.id
+        awaitingChoice = false
+    }
+
+    /// Stop the run in flight. The text boxes are left as they are, ready for more detail.
+    func stop() {
+        guard isRunning, !stopping else { return }
+        stopping = true
+        runTask?.cancel()
     }
 
     /// Take the guide's recommendation: re-point the target, re-score against it, and rewrite once.
@@ -1393,7 +1513,7 @@ final class TranslatorState: ObservableObject {
 
     /// Rewrite for what is selected: the guide agreed with it, or the user overrode the guide.
     func rewriteAnyway() {
-        awaitingChoice = false
+        keepSelected()
         rewrite(for: selectedTarget)
     }
 
@@ -1402,7 +1522,17 @@ final class TranslatorState: ObservableObject {
     var engineEffort: String { Advisor.engineEffort(for: advice) }
 
     private func rewrite(for target: Target) {
+        // A fast double click on a guide button must not start a second paid run.
+        guard !isRunning else { return }
         isRunning = true
+        stopping = false
+        errorText = ""
+        notice = ""
+        result = ""
+        progress = RunProgress(stage: .rewriting, attempt: 1, maxAttempts: nil)
+        runSteps = (target.scored ? ["Score"] : []) + ["Rewrite", "Check"]
+        let started = Date()
+        runStarted = started
         checkSummary = ""
         checkLines = []
         checkPassed = true
@@ -1419,12 +1549,12 @@ final class TranslatorState: ObservableObject {
         // passes it on. The judge only sees the original and the context, so without this line it
         // reads the app's own number as invented and bounces a draft that passed every code check.
         let checkContext = RewritePipeline.checkContext(context, target: target, suggested: suggested)
-        Task {
+        runTask = Task {
             do {
                 let outcome = try await RewritePipeline.run(target: target, messy: messy, context: context,
                                                             suggested: suggested, effort: effort,
                                                             functions: activeFunctions,
-                                                            status: { self.status = $0 })
+                                                            progress: { self.progress = $0 })
                 let check = outcome.check
                 self.result = outcome.output
                 self.lastRun = (target: target, original: messy, rewrite: outcome.output, context: checkContext)
@@ -1436,10 +1566,16 @@ final class TranslatorState: ObservableObject {
                         .prefix(3)
                         .map { "\($0.rule): \($0.text)" }
                 }
+                self.lastRunSeconds = Date().timeIntervalSince(started)
+                if Self.remembers { UserDefaults.standard.set(self.lastRunSeconds, forKey: "lastRunSeconds") }
+            } catch is CancellationError {
+                self.notice = "Stopped. Your text is still in the box."
             } catch {
                 self.errorText = error.localizedDescription
             }
-            self.status = ""
+            self.progress = nil
+            self.runStarted = nil
+            self.stopping = false
             self.isRunning = false
         }
     }
@@ -1674,31 +1810,33 @@ struct GuidePanel: View {
                     }
                 }
 
-                Text(advice.model.id == "haiku"
-                     ? "\(advice.model.label) · no effort setting"
-                     : "\(advice.model.label) · \(advice.effort)")
-                    .font(.callout.weight(.bold))
-                    .fixedSize(horizontal: false, vertical: true)
+                // The guide's pick and the model the rewrite is for are two things. When they
+                // differ both are named, so a guide that says Opus never reads as a switch to Opus.
+                if advice.model.id == state.selectedTarget.id {
+                    Text(Self.pick(advice.model, advice.effort))
+                        .font(.callout.weight(.bold))
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Guide would pick \(Self.pick(advice.model, advice.effort))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Writing for \(Self.pick(state.selectedTarget, advice.effort))")
+                        .font(.callout.weight(.bold))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-                if state.awaitingChoice && !advice.verdict.needsDecision {
-                    Button { state.rewriteAnyway() } label: {
-                        Text("Translate for \(state.selectedLabel)")
-                            .font(.caption.weight(.semibold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .controlSize(.small)
-                    .buttonStyle(.borderedProminent)
-                } else if state.awaitingChoice {
-                    Button { state.acceptRecommendation() } label: {
-                        Text("Use \(advice.model.label)")
-                            .font(.caption.weight(.semibold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .controlSize(.small)
-                    .buttonStyle(.borderedProminent)
-
+                if state.awaitingChoice {
                     Button { state.rewriteAnyway() } label: {
                         Text("Keep \(state.selectedTarget.label)")
+                            .font(.caption.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .controlSize(.small)
+                    .buttonStyle(.borderedProminent)
+
+                    Button { state.acceptRecommendation() } label: {
+                        Text("Switch to \(advice.model.label)")
                             .font(.caption)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -1712,12 +1850,16 @@ struct GuidePanel: View {
         }
     }
 
+    private static func pick(_ model: Target, _ effort: String) -> String {
+        model.id == "haiku" ? "\(model.label) · no effort setting" : "\(model.label) · \(effort)"
+    }
+
     // MARK: One token line
 
     private var tokens: some View {
         Text(state.advice == nil
              ? "~\(TokenEstimate.format(state.translationInputTokens)) in"
-             : "~\(TokenEstimate.format(state.translationInputTokens)) in · opus/\(state.engineEffort)")
+             : "~\(TokenEstimate.format(state.translationInputTokens)) in · rewriter opus/\(state.engineEffort)")
             .font(.system(.caption2, design: .monospaced))
             .foregroundStyle(.secondary)
     }
@@ -1845,14 +1987,64 @@ struct ChoiceAlert: View {
                 .font(.caption)
                 .foregroundStyle(state.selectedTarget.maker.accent)
             Button("Switch to \(advice.model.label)") { state.acceptRecommendation() }
-                .controlSize(.small)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(CyberButtonStyle(tint: state.selectedTarget.maker.accent))
                 .help("Select \(advice.model.label) and translate for it")
-        } else if state.awaitingChoice {
-            Text("Check the guide first.")
-                .font(.caption)
-                .foregroundStyle(state.selectedTarget.maker.accent)
         }
+    }
+}
+
+/// The live run beside the Stop button: every step with the current one lit, which try it is on,
+/// and a clock. The last finished run's time sits next to the clock as a yardstick, since a
+/// one-shot rewrite gives no honest percentage to show.
+struct RunTracker: View {
+    @ObservedObject var state: TranslatorState
+
+    private static func clock(_ seconds: Double) -> String {
+        let s = max(0, Int(seconds))
+        return "\(s / 60):" + String(format: "%02d", s % 60)
+    }
+
+    var body: some View {
+        if let progress = state.progress, let started = state.runStarted {
+            let accent = state.selectedTarget.maker.accent
+            let current = state.runSteps.count - (progress.stage == .rewriting ? 2 : 1)
+            HStack(spacing: 6) {
+                ForEach(Array(state.runSteps.enumerated()), id: \.offset) { index, name in
+                    HStack(spacing: 3) {
+                        if index == current {
+                            ProgressView().controlSize(.mini).tint(accent)
+                        } else {
+                            Image(systemName: index < current ? "checkmark.circle.fill" : "circle")
+                                .font(.caption2)
+                        }
+                        Text(name).font(index == current ? Font.caption.weight(.bold) : Font.caption)
+                    }
+                    .foregroundStyle(index < current ? Cyber.ok : (index == current ? accent : Cyber.mute))
+                    if index < state.runSteps.count - 1 {
+                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(Cyber.mute)
+                    }
+                }
+                TimelineView(.periodic(from: started, by: 1)) { timeline in
+                    Text(Self.detail(progress, elapsed: timeline.date.timeIntervalSince(started),
+                                     last: state.lastRunSeconds, stopping: state.stopping))
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(Cyber.mute)
+                        .lineLimit(1)
+                }
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    static func detail(_ progress: RunProgress, elapsed: Double, last: Double, stopping: Bool) -> String {
+        if stopping { return "stopping..." }
+        var parts: [String] = []
+        if progress.attempt > 1 {
+            parts.append("try \(progress.attempt)" + (progress.maxAttempts.map { " of \($0)" } ?? ""))
+        }
+        parts.append(clock(elapsed))
+        if last > 0 { parts.append("last run \(clock(last))") }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -2043,22 +2235,37 @@ struct ContentView: View {
                     .tint(Cyber.pink)
 
                     HStack(spacing: 10) {
+                        // While the guide waits, this same button keeps the model already picked,
+                        // so pressing it twice always translates for what the user chose.
                         Button { state.translate() } label: {
-                            Text((state.isRunning ? (state.status.isEmpty ? "Translating..." : state.status) : "Translate").uppercased())
+                            Text((state.isRunning ? "Translating..."
+                                  : state.awaitingChoice ? "Keep \(state.selectedTarget.chipLabel)" : "Translate").uppercased())
                                 .tracking(1.5)
                         }
                         .buttonStyle(CyberButtonStyle(tint: Cyber.pink, filled: true))
                         .disabled(state.isRunning
-                                  || state.awaitingChoice
                                   || state.messyPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .keyboardShortcut(.return, modifiers: .command)
 
-                        Text("⌘↵").font(.caption).foregroundStyle(Cyber.mute)
-                        if state.isRunning { ProgressView().controlSize(.small).tint(accent) }
-                        ChoiceAlert(state: state)
+                        if state.isRunning {
+                            Button { state.stop() } label: {
+                                Label("Stop", systemImage: "stop.fill").font(.caption.weight(.bold))
+                            }
+                            .buttonStyle(CyberButtonStyle(tint: Cyber.yellow))
+                            .disabled(state.stopping)
+                            .keyboardShortcut(".", modifiers: .command)
+                            .help("Stops the run so you can add more detail. Your text stays in the box.")
+                            Text("⌘.").font(.caption).foregroundStyle(Cyber.mute)
+                            RunTracker(state: state)
+                        } else {
+                            Text("⌘↵").font(.caption).foregroundStyle(Cyber.mute)
+                            ChoiceAlert(state: state)
+                        }
                         Spacer()
                         if !state.errorText.isEmpty {
                             Text(state.errorText).font(.caption).foregroundStyle(Color.red).lineLimit(2)
+                        } else if !state.notice.isEmpty {
+                            Text(state.notice).font(.caption).foregroundStyle(Cyber.yellow).lineLimit(2)
                         }
                     }
 
